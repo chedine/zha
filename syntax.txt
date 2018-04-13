@@ -1,0 +1,14 @@
+Expressions
+------------
+
+5
+"dinesh babu"
+true
+55.12
+
+add 5 6 | mul 2
+
+add 5 a | mul b where {a : 6, b : 2}
+
+add 5 6 | myfn 2 where {myfn: add}
+

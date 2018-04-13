@@ -1,0 +1,32 @@
+<html>
+	<body>
+		<script src="interpreter.js"></script>
+		<script>
+		var v1 = new Literal(5);
+		var v2 = new Literal("Dinesh");
+		
+		var s1 = new Symbol("f1");
+		var s2 = new Symbol("f2");
+		var s3 = new Symbol("a");
+		
+		var lib = {
+			f1 : (a) => a * a,
+			f2 : (a,b) => a * b,
+			c : () => 123,
+			d : (a,fn) => a * fn()
+		}
+		
+		var rt = new ENV(undefined,lib);
+		//console.log(rt);
+		var scope1 = new ENV(rt, {a: 55});
+	//	console.log(scope1);
+
+		var ast = v1;
+		var ast1 = s3;
+		var ast2 = [s1, v1];
+		
+		var ast3 = [ new Symbol("d"), 5, new Symbol('c')];
+		
+		</script>
+	</body>
+</html>
