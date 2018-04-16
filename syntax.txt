@@ -12,3 +12,28 @@ add 5 a | mul b where {a : 6, b : 2}
 
 add 5 6 | myfn 2 where {myfn: add}
 
+echo 5 | add 6 | mul 2
+
+Loops
+-----
+
+Conditionals
+------------
+
+Execution model
+--------------------
+
+- Each block is a list of list.
+- Result/output of each element in the outer list is chained as the last input to the next
+element in the list.
+
+var result = provided_startVal | nothing
+for each ast in list  
+    ast.push(result)
+    result = eval(ast)
+
+- Where clause provides a supplemental environment.
+Alternate form/representation of the scope for the block of code/ function
+
+- Symbols must be looked into the Where env first, and lang runtime next.
+- Expressions in where clause cannot create an inner scope again. Do we have to??

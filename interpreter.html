@@ -1,32 +1,60 @@
 <html>
-	<body>
-		<script src="interpreter.js"></script>
-		<script>
+
+<body>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/ramda/0.25.0/ramda.js"></script>
+	<script src="lib.js"></script>
+	<script src="interpreter.js"></script>
+	<script>
 		var v1 = new Literal(5);
 		var v2 = new Literal("Dinesh");
-		
+
 		var s1 = new Symbol("f1");
 		var s2 = new Symbol("f2");
 		var s3 = new Symbol("a");
-		
+
 		var lib = {
-			f1 : (a) => a * a,
-			f2 : (a,b) => a * b,
-			c : () => 123,
-			d : (a,fn) => a * fn()
+			f1: (a) => a * a,
+			f2: (a, b) => a * b,
+			c: () => 123,
+			d: (a, fn) => a * fn(),
+			"|": (prevVal, fn, fnArgs) => {
+				const args = fnArgs || [];
+				args.push(prevVal);
+				return fn.apply(undefined, args);
+			}
 		}
-		
-		var rt = new ENV(undefined,lib);
+
+		var rt1 = new ENV(undefined, lib);
 		//console.log(rt);
-		var scope1 = new ENV(rt, {a: 55});
-	//	console.log(scope1);
+		var scope1 = new ENV(rt, {
+			a: 55
+		});
+		//	console.log(scope1);
 
 		var ast = v1;
 		var ast1 = s3;
 		var ast2 = [s1, v1];
-		
-		var ast3 = [ new Symbol("d"), 5, new Symbol('c')];
-		
-		</script>
-	</body>
+
+		var ast3 = [new Symbol("d"), 5, new Symbol('c')];
+
+		var runtime = new ENV(undefined, rt);
+		function parse() {
+			var program = document.querySelector('#program').value;
+			var ast = read(program);
+			//			console.log(ast);
+			var parsedAST = transform(ast);
+			var results = evaluate(parsedAST, runtime);
+			//console.log(ast, parsedAST, results);
+			console.log(results);
+			document.querySelector('#programResults').value = results;
+		}
+	</script>
+	<h3>A rough interpreter</h3>
+	<textarea cols="80" rows="5" id="program">echo 5 | add 3 | mul 2</textarea>
+	<div style="margin-top:15px; margin-bottom:15px;">
+		<input type="button" value="parse" onclick="parse()" />
+	</div>
+	<textarea cols="80" rows="3" id="programResults"></textarea>
+</body>
+
 </html>
