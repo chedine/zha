@@ -3,6 +3,7 @@
 <body>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/ramda/0.25.0/ramda.js"></script>
 	<script src="lib.js"></script>
+	<script src="types.js"></script>
 	<script src="interpreter.js"></script>
 	<script>
 		var v1 = new Literal(5);
@@ -13,10 +14,10 @@
 		var s3 = new Symbol("a");
 
 		var lib = {
-			f1: (a) => a * a,
-			f2: (a, b) => a * b,
-			c: () => 123,
-			d: (a, fn) => a * fn(),
+			f1: new ZhaFn((a) => a * a),
+			f2: new ZhaFn((a, b) => a * b),
+			c: new ZhaFn(() => 123),
+			d: new ZhaFn((a, fn) => a * fn()),
 			"|": (prevVal, fn, fnArgs) => {
 				const args = fnArgs || [];
 				args.push(prevVal);
@@ -37,6 +38,14 @@
 
 		var ast3 = [new Symbol("d"), 5, new Symbol('c')];
 
+		/**
+		* Clean all runtime libs by wrapping them as ZhaFn
+		* Needs some thinking to clean this up
+		**/
+		
+		for(key in rt){
+			rt[key] = new ZhaFn(rt[key]);
+		}
 		var runtime = new ENV(undefined, rt);
 		function parse() {
 			var program = document.querySelector('#program').value;

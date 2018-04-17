@@ -1,93 +1,5 @@
-function Symbol(token) {
-	this.symbol = token;
-	this.type = Array.isArray(token) ? 1 : 0;
-	this.__lang = 'symbol';
-	this.isList = function () {
-		return this.type === 1;
-	}
-	this.isSymbol = function () {
-		return this.type === 0;
-	}
-}
-
-function ENV(rt, env) {
-	this.env = env;
-	this.root = rt;
-	this.lookup = function (symbol) {
-		var key = symbol;
-		var value;
-		if (this.env.hasOwnProperty(key)) {
-			value = this.env[key];
-		} else if (this.root) {
-			value = this.root.lookup(symbol);
-		} else {
-			console.error(key + " not available in environment");
-			//TODO : Fix by raising error.
-			//return undefined;
-		}
-		if (isSymbol(value)) {
-			return this.lookup(value);
-		} else {
-			return value;
-		}
-	}
-}
-
-function Literal(val) {
-	this.value = val;
-	this.__lang = 'literal';
-}
-
-function isSymbol(target) {
-	return target && target instanceof Symbol;
-}
-
-function isSplOp(target) {
-	return target && target instanceof langOperator;
-}
-
-function isList(target) {
-	return Array.isArray(target);
-}
-
-function isLiteral(target) {
-	return target && target instanceof Literal;
-}
-
-function langOperator(token) {
-	this.op = token;
-	this.__lang = 'spl_op';
-	this.isPipe = function () {
-		return this.op === '|';
-	}
-	this.isEcho = function(){
-		return this.op === '->';
-	}
-}
-const typeIfy = function (literal) {
-	if (literal === "|") {
-		return new langOperator("|");
-	}
-	else if (literal === "->") {
-		return new langOperator("->");
-	}
-	else if (literal === "true") {
-		return new Literal(true);
-	} else if (literal === "false") {
-		return new Literal(false);
-	} else if (!isNaN(parseFloat(literal))) {
-		return new Literal(parseFloat(literal));
-	} else if (literal.startsWith('"') && literal.endsWith('"')) {
-		//Remove quotes
-		return new Literal(literal.substring(1, literal.length - 1));
-	} else {
-		return new Symbol(literal);
-	}
-}
-
-
 function read(program) {
-	const ast = readExpr(program, 0, []);
+	const ast = readExpr(program, 0, new ZhaList([]));
 	return ast;
 }
 
@@ -107,8 +19,8 @@ function readExpr(program, startPos, baseAST) {
 		if (char === '"') {
 			if (buf.length > 0) {
 				if (readingQuotes) {
-					addToAST(buf);
 					buf = buf + '"';
+					addToAST(buf);
 					buf = '';
 					readingQuotes = false;
 				} else {
@@ -128,7 +40,7 @@ function readExpr(program, startPos, baseAST) {
 				buf = buf + char;
 			}
 		} else if (char === '(') {
-			ast.push(readExpr(program, i + 1, []));
+			ast.push(readExpr(program, i + 1, new ZhaList([])));
 		} else if (char === ')') {
 			addToAST(buf);
 			buf = '';
@@ -148,41 +60,33 @@ function readExpr(program, startPos, baseAST) {
 	return ast;
 }
 
-function transform(actualAst) {
-	var astChain = buildASTChain(actualAst);
-	return astChain;
-}
-function buildASTChain(actualAst) {
-	var ast = [];
-	var currentAST = [];
-	for (var i = 0; i < actualAst.length; i++) {
-		var token = actualAst[i];
-		if (isSplOp(token) && token.isPipe()) {
-			ast.push(currentAST);
-			currentAST = [];
-		} else {
-			currentAST.push(token);
-		}
-	}
-	if (currentAST.length > 0) {
-		ast.push(currentAST);
-	}
-	return ast;
-}
-
 function interpretAST(ast, env) {
 	if (isList(ast)) {
 		var evaled = [];
-		for (var i = 0; i < ast.length; i++) {
-			evaled.push(interpret(ast[i], env));
+		var first = ast.first();
+		for (var i = 0; i < ast.size(); i++) {
+			evaled.push(interpret(ast.nth(i), env));
 		}
 		return evaled;
 	} else {
 		if (isLiteral(ast)) {
 			return ast.value;
 		} else if (isSymbol(ast)) {
-			//Must be a symbol
-			return env.lookup(ast.symbol);
+			if(ast.symbol === 'let'){
+				var bindings = ast.second();
+				var letBody = ast.nth(2); //third
+				var letOverEnv = new ENV(env, {});
+				for(var i=0;i<bindings.size;i=i+2){
+					var sym = bindings.nth(i);
+					var val = bindings.nth(i+1);
+					letOverEnv.define(sym, interpretAST(val, env));
+				}
+				return interpretAST(letBody, letOverEnv);
+			}
+			else{
+				return env.lookup(ast.symbol);
+			}
+			
 		} else {
 			//Cannot happen
 			return ast;
@@ -206,16 +110,85 @@ function interpret(ast, env) {
 	}
 }
 
-function evaluate(ast, env, startValue) {
-	var result = startValue;
-	for (i = 0; i < ast.length; i++) {
-		//Each el must be a list
-		//Program ast is a list of list
-		var currentAST = ast[i];
-		if (i > 0 || result) {
-			currentAST.push(result);
-		}
-		result = interpret(currentAST, env);
+function evalUnderEnv(ast, env){
+	if(isList(ast)){
+		return evalList(ast, env);
 	}
-	return result;
+	else if(isSymbol(ast)){
+		return env.lookup(ast.value);
+	}
+	else if(isLiteral(ast)){
+		return ast.value;
+	}
+	else{
+		//Possible ???
+		return ast;
+	}
+}
+
+function evalList(list , env){
+	var first = list.first();
+	if(isSymbol(first)){
+		if(first.value === 'def'){
+			var binding = list.second();
+			var expr = list.nth(2); //third
+			var value = evalUnderEnv(expr, env);
+			env.define(binding, value);
+			return value;
+		}
+		else if(first.value === 'let'){
+			//Let over form
+			var bindings = list.second();
+			var letBody = list.nth(2); //Third in the series
+			var letOverEnv = new ENV(env, {});
+			for(var i=0;i<bindings.size();i=i+2){
+				letOverEnv.define(bindings.nth(i), evalUnderEnv(bindings.nth(i+1), letOverEnv));
+			}
+			return evalUnderEnv(letBody, letOverEnv);
+		}
+		else if(first.value === 'fn'){
+			var args = list.second();
+			var fnBody = list.nth(2);
+			var fnImpl = new ZhaFn((params) => {
+				//console.log("Called with " + arg);
+				for(j=0;j<args.size();j++){
+					env.define(args.nth(j), params.nth(j));
+				}
+				return evalUnderEnv(fnBody, env);
+			}, true);
+			
+			return fnImpl;
+		}
+		else{
+			var resolvedSym = evalUnderEnv(first, env);
+			return dispatch(resolvedSym, list.rest(), env);	
+		}
+		
+	}
+	else if(isList(first)){
+		
+	}
+	else{
+		return dispatch(first, list.rest(),env);
+	}
+}
+
+function dispatch(head, rest, env){
+	var evaled = new ZhaList(expandListform(rest, env));
+	return head.invoke(evaled);
+}
+
+function expandListform(list, env){
+	var expandedForm = [];
+	for (var i = 0; i < list.size(); i++) {
+		expandedForm.push(evalUnderEnv(list.nth(i), env));
+	}
+	return expandedForm;
+}
+
+function eval(ast){
+	var runtime = new ENV(undefined, rt);
+	for(var i=0;i<ast.size();i++){
+		console.log(evalUnderEnv(ast.nth(i), runtime));
+	}
 }
