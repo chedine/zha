@@ -72,14 +72,20 @@ function ZhaList(array) {
 function ZhaFn(fn, dynamic){
 	this.value = fn;
 	this.dynamic = dynamic;
+	this.filledArgs = [];
 	this.invoke = function(params){
+		var output;
 		if(!dynamic){
 		//Params is a ZhaList of arg values;
-		return this.value.apply(undefined,params.value);
+			output =  this.value.apply(undefined,params.value);
 		}
 		else{
-			return this.value(params);
+			output = this.value(params);
 		}
+		if(output instanceof Function){
+			return new ZhaFn(output, this.dynamic);
+		}
+		return output;
 	}
 }
 function Nothing(){

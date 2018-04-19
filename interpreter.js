@@ -149,15 +149,7 @@ function evalList(list , env){
 		else if(first.value === 'fn'){
 			var args = list.second();
 			var fnBody = list.nth(2);
-			var fnImpl = new ZhaFn((params) => {
-				//console.log("Called with " + arg);
-				for(j=0;j<args.size();j++){
-					env.define(args.nth(j), params.nth(j));
-				}
-				return evalUnderEnv(fnBody, env);
-			}, true);
-			
-			return fnImpl;
+			return createFn(args, fnBody, env);
 		}
 		else{
 			var resolvedSym = evalUnderEnv(first, env);
@@ -166,11 +158,50 @@ function evalList(list , env){
 		
 	}
 	else if(isList(first)){
-		
+		var result = evalList(first, env);
+		var rest = list.rest();
+		var expandedListForm = [];
+		expandedListForm.push(result);
+		for(var i=0;i<rest.size();i++){
+			expandedListForm.push(rest.nth(i));
+		}
+		return evalList(new ZhaList(expandedListForm), env);
 	}
 	else{
 		return dispatch(first, list.rest(),env);
 	}
+}
+
+function createFn(fnArgs,fnBody, currentEnv,prefilledArgs){
+	var fnImpl = new ZhaFn((params) => {
+
+		if(params.size() === fnArgs.size()){
+			//all parameters supplied;
+			//params is a ZhaList
+			var fnEnv = new ENV(currentEnv, {});
+			for(j=0;j<params.size();j++){
+				fnEnv.define(fnArgs.nth(j), params.nth(j));
+			}
+			return evalUnderEnv(fnBody, fnEnv);
+		}
+		else {
+			var partialEnv = new ENV(currentEnv, {});
+			for(j=0;j<params.size();j++){
+				partialEnv.define(fnArgs.nth(j), params.nth(j));
+			}
+			var argsWaiting = fnArgs.value.slice(params.size());
+			return new ZhaFn((p) => {
+				//partialEnv.define(new Symbol("b"), p.nth(0));
+				for(j=0;j<p.size();j++){
+					partialEnv.define(argsWaiting[j], p.nth(j));
+				}
+				console.log("Partial application ", partialEnv);
+				return evalUnderEnv(fnBody, partialEnv);
+			}, true);
+		}
+	}, true);
+	
+	return fnImpl;
 }
 
 function dispatch(head, rest, env){
