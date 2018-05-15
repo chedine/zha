@@ -1,27 +1,42 @@
 <html>
-	<head>
-		<style>
-			.codeblock{
-				width:500px;
-				height:400px;
-				border:1px solid gray;
-			}
-		</style>
-	</head>
-	<body>
-		<div class="codeblock">
-			<div class="expr odd">
-			
-			</div>
-			<div class="expr even">
-			
-			</div>
-			<div class="expr odd">
-			
-			</div>
-			<div class="expr even">
-			
-			</div>
+
+<head>
+	<style>
+		.module {
+			width: 800px;
+			/**height: 400px;**/
+			border: 1px solid gainsboro;
+		}
+
+		.codeblock {
+			border: 1px solid gray;
+		}
+		.odd{
+			background-color:dimgray;
+		}
+		.even{
+			background-color:snow;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="module">
+	</div>
+	<div class="codeblock">
+		<div class="expr odd">
+				<span>allFiles = ls fileName</span>
 		</div>
-	</body>
+		<div class="expr even">
+				<span>filteredFiles = filter (cond? true) allFiles</span>
+		</div>
+		<div class="expr odd">
+				<span>loc = filteredFiles || count</span>
+		</div>
+		<div class="expr even">
+				<span>a = filter (cond? true) allFiles</span>
+		</div>
+	</div>
+</body>
+
 </html>
