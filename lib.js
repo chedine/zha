@@ -74,7 +74,8 @@ const rt = {
 	"false?" : evalIfFalse,
 	"apply": apply,
 	"rapply" : rapply,
-	"echo" : (v) => v
+	"echo" : (v) => v,
+	"log" : (v) => {console.log(v); return v;}
 }
 
 const load_runtime = function () {

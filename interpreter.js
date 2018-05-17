@@ -1,3 +1,5 @@
+const _MACRO_CHARS = { "{":1 ,"}" : 1};
+
 function read(program) {
 	const ast = readExpr(program, 0, new ZhaList([]));
 	return ast;
@@ -48,10 +50,18 @@ function readExpr(program, startPos, baseAST) {
 		} else if (!readingQuotes &&
 			char === '\r' || char === '\n' || char === '\r\n') {
 			addToAST(buf);
-			addToAST("\n");
+			//addToAST("\n");
+			buf = '';
+		}
+		else if (char === '\t') {
+			addToAST(buf);
 			buf = '';
 		} else {
 			buf += char;
+			if(_MACRO_CHARS[buf]){
+				addToAST(buf);
+				buf='';
+			}
 		}
 	}
 	if (buf.trim().length > 0) {
@@ -167,9 +177,22 @@ function expandListform(list, env) {
 	return expandedForm;
 }
 
+//Eval exist as a way to eval more than one exp
+//useful for gulping a whole file.
 function eval(ast) {
+	var lastVal;
 	var runtime = new ENV(undefined, rt);
 	for (var i = 0; i < ast.size(); i++) {
-		console.log(evalUnderEnv(ast.nth(i), runtime));
+		lastVal = evalExp(ast.nth(i), runtime);
 	}
+	
+	return lastVal;
+}
+
+//Used for single expr
+function evalExp(ast, env) {
+	if(!env){
+		env = new ENV(undefined, rt);
+	}
+	return evalUnderEnv(ast, env);
 }

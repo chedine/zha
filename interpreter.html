@@ -6,38 +6,7 @@
 	<script src="types.js"></script>
 	<script src="interpreter.js"></script>
 	<script>
-		var v1 = new Literal(5);
-		var v2 = new Literal("Dinesh");
-
-		var s1 = new Symbol("f1");
-		var s2 = new Symbol("f2");
-		var s3 = new Symbol("a");
-
-		var lib = {
-			f1: new ZhaFn((a) => a * a),
-			f2: new ZhaFn((a, b) => a * b),
-			c: new ZhaFn(() => 123),
-			d: new ZhaFn((a, fn) => a * fn()),
-			"|": (prevVal, fn, fnArgs) => {
-				const args = fnArgs || [];
-				args.push(prevVal);
-				return fn.apply(undefined, args);
-			}
-		}
-
-		var rt1 = new ENV(undefined, lib);
-		//console.log(rt);
-		var scope1 = new ENV(rt, {
-			a: 55
-		});
-		//	console.log(scope1);
-
-		var ast = v1;
-		var ast1 = s3;
-		var ast2 = [s1, v1];
-
-		var ast3 = [new Symbol("d"), 5, new Symbol('c')];
-
+		
 		/**
 		* Clean all runtime libs by wrapping them as ZhaFn
 		* Needs some thinking to clean this up
@@ -47,16 +16,37 @@
 			rt[key] = new ZhaFn(rt[key]);
 		}
 		var runtime = new ENV(undefined, rt);
+		
 		function parse() {
 			var program = document.querySelector('#program').value;
-			var ast = read(program);
-			//			console.log(ast);
-			var parsedAST = transform(ast);
-			var results = evaluate(parsedAST, runtime);
-			//console.log(ast, parsedAST, results);
-			console.log(results);
+			var results = run(program);
 			document.querySelector('#programResults').value = results;
 		}
+
+		function run(program){
+			var ast = read(program);
+			var results = eval(ast);
+			//console.log(results);
+			return results;
+		}
+		function sampletests(){
+			var p1 = `(def a 10) (add 5 a)`;
+			console.log(p1, run(p1));
+			p1 = `(def myfn (fn (a b c) (add (add a b) c)))`;
+			console.log(p1, run(p1));
+			p1 = `(myfn 1 2 3)`;
+			console.log(p1, run(p1));
+			p1 = `(((myfn 1) 2) 3)`;
+			console.log(p1, run(p1));
+			var p2 = `(def a1 10)
+			(def a2 55)			
+			(def a3 (fn (a b)
+					   (add a b)
+			))	
+			(log (add 10 a1))`;
+			console.log(p2, run(p2));
+		}
+		sampletests();
 	</script>
 	<h3>A rough interpreter</h3>
 	<textarea cols="80" rows="5" id="program">echo 5 | add 3 | mul 2</textarea>
