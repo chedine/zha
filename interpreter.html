@@ -46,7 +46,7 @@
 					   (add a b)
 			))	
 			(log (add 10 a1))`;
-			/**console.log(p2, await run(p2));
+			console.log(p2, await run(p2));
 			var p3 =  `((fn (a b) (add a b)) 33 33)`;
 			console.log(p3, await run(p3));
 
@@ -64,7 +64,7 @@
 			p3 = `(toUpper (http/get "interpreter.html" 
 							 (time/after 3000 (firstFew 15))))`
 			console.log(p3 , await run(p3));
-			**/
+			
 
 			//Macros test
 			var p4 = `(defmacro infix (list (second ast) (first ast) (third ast) ))`

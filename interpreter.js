@@ -7,16 +7,32 @@ function read(program) {
 	const ast = readExpr(program, 0, new ZhaList([]));
 	return ast;
 }
+function readMacro(program, currentPos, astSoFar){
+	var form = (readExpr(program, currentPos + 1, new ZhaList([])));
+	var listForm = form.first();
+	var intercepted = [new Symbol("list")].concat(listForm.rest().value);
+	astSoFar.push(new ZhaList(intercepted));
+}
 
-function readExpr(program, startPos, baseAST) {
-	const ast = baseAST;
+function isReaderMacro(token){
+	return token === "`";
+}
+
+function readExpr(program, startPos, ast) {
+	//const ast = baseAST;
 	let buf = '';
 	let readingQuotes = false;
-	//Either add it to the topmost AST if we aren't reading a nested expr
-	//Or add it to the current nested expr(AST)
+	i = startPos;
+
 	const addToAST = (token) => {
 		if (token.length > 0) {
-			ast.push(typeIfy(token));
+			if(isReaderMacro(token)){
+				console.log("Reader macro : ", token);
+				readMacro(program, i , ast);
+			}
+			else{
+				ast.push(typeIfy(token));
+			}
 		}
 	}
 	for (i = startPos; i < program.trim().length; i++) {
