@@ -10,7 +10,7 @@ function read(program) {
 function readMacro(program, currentPos, astSoFar){
 	var form = (readExpr(program, currentPos + 1, new ZhaList([])));
 	var listForm = form.first();
-	var intercepted = [new Symbol("list")].concat(listForm.rest().value);
+	var intercepted = [new Symbol("list")].concat(listForm.value);
 	astSoFar.push(new ZhaList(intercepted));
 }
 
