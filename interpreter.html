@@ -2,51 +2,74 @@
 
 <body>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/ramda/0.25.0/ramda.js"></script>
-	<script src="lib.js"></script>
+	
 	<script src="types.js"></script>
+	<script src="lib.js"></script>
 	<script src="interpreter.js"></script>
 	<script>
-		
 		/**
-		* Clean all runtime libs by wrapping them as ZhaFn
-		* Needs some thinking to clean this up
-		**/
-		
-		for(key in rt){
+		 * Clean all runtime libs by wrapping them as ZhaFn
+		 * Needs some thinking to clean this up
+		 **/
+
+		for (key in rt) {
 			rt[key] = new ZhaFn(rt[key]);
 		}
 		var runtime = new ENV(undefined, rt);
-		
+
 		function parse() {
 			var program = document.querySelector('#program').value;
 			var results = run(program);
 			document.querySelector('#programResults').value = results;
 		}
 
-		function run(program){
+		// test function 
+		async function run(program) {
 			var ast = read(program);
-			var results = eval(ast);
+			var results = await eval(ast);
 			//console.log(results);
 			return results;
 		}
-		function sampletests(){
+
+		async function sampletests() {
 			var p1 = `(def a 10) (add 5 a)`;
-			console.log(p1, run(p1));
+			console.log(p1, await run(p1));
 			p1 = `(def myfn (fn (a b c) (add (add a b) c)))`;
-			console.log(p1, run(p1));
+			console.log(p1, await run(p1));
 			p1 = `(myfn 1 2 3)`;
-			console.log(p1, run(p1));
+			console.log(p1, await run(p1));
 			p1 = `(((myfn 1) 2) 3)`;
-			console.log(p1, run(p1));
+			console.log(p1, await run(p1));
 			var p2 = `(def a1 10)
 			(def a2 55)			
 			(def a3 (fn (a b)
 					   (add a b)
 			))	
 			(log (add 10 a1))`;
-			console.log(p2, run(p2));
+			/**console.log(p2, await run(p2));
+			var p3 =  `((fn (a b) (add a b)) 33 33)`;
+			console.log(p3, await run(p3));
+
+			p3 =  `(apply (fn (a b) (add b a)) 8 88)`;
+			console.log(p3, await run(p3));
+			//Async tests
+			p3 =  `(time/after 1000 (fn () (add 55 555)))`;
+			console.log(p3, await run(p3));
+			p3 =  `( (time/after 1200 (fn () (add 55))) 99)`;
+			//p3 =  `(after-timeout 1200 ((fn (a b) (add a b)) 55 555))`;
+			console.log(p3, await run(p3));
+			p3 =  `(toUpper (http/get "interpreter.html" log))`;
+			console.log(p3, await run(p3));
+
+			p3 = `(toUpper (http/get "interpreter.html" 
+							 (time/after 3000 (firstFew 15))))`
+			console.log(p3 , await run(p3));
+			**/
+
+			//Macros test
+			var p4 = `(defmacro infix (list (second ast) (first ast) (third ast) ))`
 		}
-		sampletests();
+		sampletests().then(console.log);
 	</script>
 	<h3>A rough interpreter</h3>
 	<textarea cols="80" rows="5" id="program">echo 5 | add 3 | mul 2</textarea>

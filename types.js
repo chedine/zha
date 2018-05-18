@@ -30,7 +30,18 @@ function ENV(rt, env) {
 		} else {
 			return value;
 		}
-	}
+	},
+	this.isPresent = function(symbol){
+		var key = symbol;
+		var value;
+		if (this.env.hasOwnProperty(key)) {
+			return true;
+		} else if (this.root) {
+			return this.root.isPresent(symbol);
+		} else {
+			return false;
+		}
+	},
 	this.define = function(sym, val){
 		this.env[sym.value] = val;
 	}
@@ -73,14 +84,15 @@ function ZhaFn(fn, dynamic){
 	this.value = fn;
 	this.dynamic = dynamic;
 	this.filledArgs = [];
-	this.invoke = function(params){
+	this.isMacro = false;
+	this.invoke = async function(params){
 		var output;
 		if(!dynamic){
 		//Params is a ZhaList of arg values;
-			output =  this.value.apply(undefined,params.value);
+			output =  await this.value.apply(undefined,params.value);
 		}
 		else{
-			output = this.value(params);
+			output = await this.value(params);
 		}
 		if(output instanceof Function){
 			return new ZhaFn(output, this.dynamic);
@@ -128,7 +140,7 @@ const typeIfy = function (literal) {
 		return new Literal(parseFloat(literal));
 	} else if (literal.startsWith('"') && literal.endsWith('"')) {
 		//Remove quotes
-		return new Literal(literal); //(literal.substring(1, literal.length - 1));
+		return new Literal(literal.substring(1, literal.length - 1));
 	} else {
 		return new Symbol(literal);
 	}

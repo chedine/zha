@@ -1,4 +1,7 @@
-const _MACRO_CHARS = { "{":1 ,"}" : 1};
+const _MACRO_CHARS = {
+	"{": 1,
+	"}": 1
+};
 
 function read(program) {
 	const ast = readExpr(program, 0, new ZhaList([]));
@@ -52,15 +55,14 @@ function readExpr(program, startPos, baseAST) {
 			addToAST(buf);
 			//addToAST("\n");
 			buf = '';
-		}
-		else if (char === '\t') {
+		} else if (char === '\t') {
 			addToAST(buf);
 			buf = '';
 		} else {
 			buf += char;
-			if(_MACRO_CHARS[buf]){
+			if (_MACRO_CHARS[buf]) {
 				addToAST(buf);
-				buf='';
+				buf = '';
 			}
 		}
 	}
@@ -70,9 +72,27 @@ function readExpr(program, startPos, baseAST) {
 	return ast;
 }
 
-function evalUnderEnv(ast, env) {
+function isMacroCall(ast, env) {
+	if(!isList(ast) || !isSymbol(ast.first())){
+		return false;
+	}
+	var present = env.isPresent(ast.first().value);
+    return present && env.lookup(ast.first().value).isMacro;
+}
+
+async function macroExpand(ast, env){
+	if(!isMacroCall(ast, env)){
+		return ast;
+	}
+	var macroExpander = env.lookup(ast.first().value);
+	var expandedForm = await macroExpander.invoke(ast.rest());
+	console.log("Expanded as ", expandedForm);
+	return expandedForm;
+}
+
+async function evalUnderEnv(ast, env) {
 	if (isList(ast)) {
-		return evalList(ast, env);
+		return await evalList(ast, env);
 	} else if (isSymbol(ast)) {
 		return env.lookup(ast.value);
 	} else if (isLiteral(ast)) {
@@ -83,13 +103,20 @@ function evalUnderEnv(ast, env) {
 	}
 }
 
-function evalList(list, env) {
+async function evalList(list, env) {
+	var list = await macroExpand(list, env);
 	var first = list.first();
 	if (isSymbol(first)) {
 		if (first.value === 'def') {
 			var binding = list.second();
 			var expr = list.nth(2); //third
-			var value = evalUnderEnv(expr, env);
+			var value = await evalUnderEnv(expr, env);
+			env.define(binding, value);
+			return value;
+		} else if (first.value === 'defmacro') {
+			var binding = list.second();
+			var expr = list.nth(2);
+			var value = createMacroFn(expr, env);
 			env.define(binding, value);
 			return value;
 		} else if (first.value === 'let') {
@@ -98,35 +125,47 @@ function evalList(list, env) {
 			var letBody = list.nth(2); //Third in the series
 			var letOverEnv = new ENV(env, {});
 			for (var i = 0; i < bindings.size(); i = i + 2) {
-				letOverEnv.define(bindings.nth(i), evalUnderEnv(bindings.nth(i + 1), letOverEnv));
+				letOverEnv.define(bindings.nth(i), await evalUnderEnv(bindings.nth(i + 1), letOverEnv));
 			}
-			return evalUnderEnv(letBody, letOverEnv);
+			return await evalUnderEnv(letBody, letOverEnv);
 		} else if (first.value === 'fn') {
 			var args = list.second();
 			var fnBody = list.nth(2);
 			return createFn(args, fnBody, env);
 		} else {
-			var resolvedSym = evalUnderEnv(first, env);
-			return dispatch(resolvedSym, list.rest(), env);
+			var resolvedSym = await evalUnderEnv(first, env);
+			return await dispatch(resolvedSym, list.rest(), env);
 		}
 
 	} else if (isList(first)) {
-		var result = evalList(first, env);
+		var result = await evalList(first, env);
 		var rest = list.rest();
 		var expandedListForm = [];
 		expandedListForm.push(result);
 		for (var i = 0; i < rest.size(); i++) {
 			expandedListForm.push(rest.nth(i));
 		}
-		return evalList(new ZhaList(expandedListForm), env);
+		return await evalList(new ZhaList(expandedListForm), env);
 	} else {
-		return dispatch(first, list.rest(), env);
+		return await dispatch(first, list.rest(), env);
 	}
+}
+
+function createMacroFn(fnBody, currentEnv) {
+	var fnImpl = new ZhaFn((params) => {
+		//For now macros have an implict argument called ast.
+		//Which is set to the ast to be expanded...
+		var fnEnv = new ENV(currentEnv, {});
+		fnEnv.define(new Symbol("ast"), params);
+		return evalUnderEnv(fnBody, fnEnv);
+	}, false);
+	fnImpl.isMacro = true;
+	return fnImpl;
 }
 
 function createFn(fnArgs, fnBody, currentEnv, prefilledArgs) {
 	var fnImpl = new ZhaFn((params) => {
-		if (params.size() === fnArgs.size()) {
+		if (params && params.size() === fnArgs.size()) {
 			//all parameters supplied;
 			//params is a ZhaList
 			var fnEnv = new ENV(currentEnv, {});
@@ -153,7 +192,7 @@ function createPartialFn(fnArgs, fnBody, suppliedParams, currentEnv) {
 		if (argsWaiting.length !== p.size()) {
 			//More args to come...lets wait for them to be applied
 			appliedParams = suppliedParams.value.concat(p.value);
-			return createPartialFn(fnArgs,fnBody,new ZhaList(appliedParams), currentEnv);
+			return createPartialFn(fnArgs, fnBody, new ZhaList(appliedParams), currentEnv);
 		} else {
 			for (j = 0; j < p.size(); j++) {
 				partialEnv.define(argsWaiting[j], p.nth(j));
@@ -164,35 +203,37 @@ function createPartialFn(fnArgs, fnBody, suppliedParams, currentEnv) {
 	}, true);
 }
 
-function dispatch(head, rest, env) {
-	var evaled = new ZhaList(expandListform(rest, env));
-	return head.invoke(evaled);
+async function dispatch(head, rest, env) {
+	var evaled = new ZhaList(await expandListform(rest, env));
+	//head is a ZhaFn
+	var results = await head.invoke(evaled);
+	return results;
 }
 
-function expandListform(list, env) {
+async function expandListform(list, env) {
 	var expandedForm = [];
 	for (var i = 0; i < list.size(); i++) {
-		expandedForm.push(evalUnderEnv(list.nth(i), env));
+		expandedForm.push(await evalUnderEnv(list.nth(i), env));
 	}
 	return expandedForm;
 }
 
 //Eval exist as a way to eval more than one exp
 //useful for gulping a whole file.
-function eval(ast) {
+async function eval(ast) {
 	var lastVal;
 	var runtime = new ENV(undefined, rt);
 	for (var i = 0; i < ast.size(); i++) {
-		lastVal = evalExp(ast.nth(i), runtime);
+		lastVal = await evalExp(ast.nth(i), runtime);
 	}
-	
+
 	return lastVal;
 }
 
 //Used for single expr
-function evalExp(ast, env) {
-	if(!env){
+async function evalExp(ast, env) {
+	if (!env) {
 		env = new ENV(undefined, rt);
 	}
-	return evalUnderEnv(ast, env);
+	return await evalUnderEnv(ast, env);
 }
