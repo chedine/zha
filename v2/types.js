@@ -172,3 +172,19 @@ Atom.prototype.sub = function() {
 		return new Atom(this.value - next , 1);
 	}.bind(this);
 }
+
+/**function Runtime(){
+	this.bindings = {};
+	this.defineFn= function (name, fn ){
+		this.bindings[name] = fn;
+	};
+	this.get = function(name){
+		return this.bindings[name];
+	}
+}**/
+
+Atom.prototype.plusOne = function(){
+	var ast = read("n.add.1");
+	console.log(this.value);
+	return evalWithEnv(ast, new ENV(undefined, {n : this.value})); //with n resolved how??
+}

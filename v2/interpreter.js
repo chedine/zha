@@ -1,5 +1,3 @@
-
-
 function read(program) {
 	const ast = readExpr(program, 0, new ZhaList([]));
 	return ast;
@@ -7,28 +5,25 @@ function read(program) {
 
 function readExpr(program, startPos, ast) {
 	i = startPos;
-	let readingQuotes = false, readingBraces= false;
+	let readingQuotes = false,
+		readingBraces = false;
 	var tokens = [];
 	var token = '';
 	for (i = startPos; i < program.trim().length; i++) {
 		const char = program.charAt(i);
-		if(char === '"'){
+		if (char === '"') {
 			readingQuotes = !readingQuotes;
 			token = token + char;
-		}
-		else if(char === '['){
+		} else if (char === '[') {
 			readingBraces = true;
-		}
-		else if(char === ']'){
+		} else if (char === ']') {
 			readingBraces = false;
-		}
-		else if(char === '.' || char === ' ' || char === '\t' || char === '\n' || char === '\r'){
-			if(!readingQuotes && !readingBraces){
+		} else if (char === '.' || char === ' ' || char === '\t' || char === '\n' || char === '\r') {
+			if (!readingQuotes && !readingBraces) {
 				tokens.push(tokenize(token))
 				token = '';
 			}
-		}
-		else{
+		} else {
 			token = token + char;
 		}
 	}
@@ -38,21 +33,35 @@ function readExpr(program, startPos, ast) {
 	return tokens;
 }
 
-function tokenize(token){
+function tokenize(token) {
 	return typeIfy(token);
 }
 
-function eval(ast){
-	
-	var val = ast[0];
-	for(var i=1;i<ast.length;i++){
-		if(typeof val === "function"){
-			val = val(ast[i].value);
+var sample_env = new ENV(undefined, {
+	'a': 10,
+	'n': 100,
+	's': "dinesh"
+});
+
+var defaultENV = new ENV(undefined, {});
+
+function eval(ast) {
+	evalWithEnv(ast, undefined);
+}
+
+function evalWithEnv(ast, env){
+	var _val = ast[0];
+	var val = env !== undefined && isSymbol(_val) && env.isPresent(_val.value) ? typeIfy(env.lookup(_val.value)) : _val; //note, value is typeified.
+
+	for (var i = 1; i < ast.length; i++) {
+		let operand = env !== undefined && isSymbol(ast[i]) && env.isPresent(ast[i].value) ? env.lookup(ast[i].value) : ast[i].value;
+		if (typeof val === "function") {
+			val = val(operand);
+		} else {
+			val = val[operand]();
 		}
-		else{
-			val = val[ast[i].value]();	
-		}
-		
+
 	}
 	console.log(val);
+	return val;
 }
