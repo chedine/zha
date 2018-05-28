@@ -8,6 +8,9 @@ function Symbol(token) {
 	this.isSymbol = function () {
 		return this.type === 0;
 	}
+	this.toString = function(){
+		return this.value;
+	}
 }
 
 function ENV(rt, env) {
@@ -78,6 +81,14 @@ function ZhaList(array) {
 	this.rest = function(){
 		return new ZhaList(this.value.slice(1));
 	}
+	this.toString = function(){
+		var str = "( ";
+		for(var i=0;i<this.value.length;i++){
+			str = str + this.value[i] + " ";
+		}
+		str = str +" ) ";
+		return str;
+	}
 }
 
 function ZhaFn(fn, dynamic){
@@ -99,6 +110,9 @@ function ZhaFn(fn, dynamic){
 		}
 		return output;
 	}
+	this.toString = function(){
+		return "#fn";
+	}
 }
 function Nothing(){
 	this.__lang = "zha_nothing";
@@ -107,6 +121,9 @@ function Nothing(){
 function Literal(val) {
 	this.value = val;
 	this.__lang = 'literal';
+	this.toString = function(){
+		return this.value;
+	}
 }
 
 function isSymbol(target) {

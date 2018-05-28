@@ -1,4 +1,6 @@
 //const R = require("ramda")
+
+const global= window;
 /* 
 Basic Arith - Lib
 */
@@ -104,7 +106,12 @@ const rt = {
 			xhttp.open("GET", url, true);
 			xhttp.send();
 		});
+	},
+	"js" : function(jsFn, jsArgs){
+		var jsFn1 = eval(jsFn);
+		return jsFn1(jsArgs);
 	}
+	
 }
 
 const load_runtime = function () {

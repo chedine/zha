@@ -1,13 +1,16 @@
-const _MACRO_CHARS = {
-	"{": 1,
-	"}": 1
+const READ_TABLE = {
+	"`": readQuasiQuote
 };
 
 function read(program) {
 	const ast = readExpr(program, 0, new ZhaList([]));
 	return ast;
 }
-function readMacro(program, currentPos, astSoFar){
+function readMacro(token, program, currentPos, astSoFar){
+	READ_TABLE[token](program,currentPos, astSoFar);
+}
+
+function readQuasiQuote(program, currentPos, astSoFar){
 	var form = (readExpr(program, currentPos + 1, new ZhaList([])));
 	var listForm = form.first();
 	var intercepted = [new Symbol("list")].concat(listForm.value);
@@ -15,7 +18,7 @@ function readMacro(program, currentPos, astSoFar){
 }
 
 function isReaderMacro(token){
-	return token === "`";
+	return READ_TABLE[token] !== undefined;
 }
 
 function readExpr(program, startPos, ast) {
@@ -26,17 +29,17 @@ function readExpr(program, startPos, ast) {
 
 	const addToAST = (token) => {
 		if (token.length > 0) {
-			if(isReaderMacro(token)){
-				console.log("Reader macro : ", token);
-				readMacro(program, i , ast);
-			}
-			else{
-				ast.push(typeIfy(token));
-			}
+			ast.push(typeIfy(token));
 		}
 	}
 	for (i = startPos; i < program.trim().length; i++) {
 		const char = program.charAt(i);
+		if(isReaderMacro(char)){
+			readMacro(char, program, i , ast);
+		//	console.log("resuming from "+ i , ast.toString());
+			i = i-1;
+			continue;
+		}
 		if (char === '"') {
 			if (buf.length > 0) {
 				if (readingQuotes) {
@@ -76,10 +79,6 @@ function readExpr(program, startPos, ast) {
 			buf = '';
 		} else {
 			buf += char;
-			if (_MACRO_CHARS[buf]) {
-				addToAST(buf);
-				buf = '';
-			}
 		}
 	}
 	if (buf.trim().length > 0) {
@@ -236,7 +235,7 @@ async function expandListform(list, env) {
 
 //Eval exist as a way to eval more than one exp
 //useful for gulping a whole file.
-async function eval(ast) {
+async function eval1(ast) {
 	var lastVal;
 	var runtime = new ENV(undefined, rt);
 	for (var i = 0; i < ast.size(); i++) {
