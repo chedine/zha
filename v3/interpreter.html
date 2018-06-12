@@ -1,0 +1,31 @@
+<html>
+<title>Blank</title>
+
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ramda/0.25.0/ramda.js"></script>
+    <script src="core.js"></script>
+    <script>
+    </script>
+    <!--<h3>A rough interpreter</h3>
+        <textarea cols="80" rows="5" id="program"></textarea>
+        <div style="margin-top:15px; margin-bottom:15px;">
+            <input type="button" value="parse" onclick="parse()" />
+        </div>
+        <textarea cols="80" rows="3" id="programResults"></textarea>-->
+        <script>
+        var e1 = read('"dine.sh".1.add.2.sub.[1.3]');
+        console.log(e1);
+
+        e1 = read('defn.myadd.(n1 number, n2 number).body(n1.add.n2)');
+        evaluate(e1);
+
+        e1 = read('defn.++.(n1 number).body(n1.add.1)');
+        evaluate(e1);
+
+        
+        e1 = read('defn.inc.().body(1.add)');
+        evaluate(e1);
+        </script>
+</body>
+
+</html>

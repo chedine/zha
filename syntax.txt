@@ -37,3 +37,35 @@ Alternate form/representation of the scope for the block of code/ function
 
 - Symbols must be looked into the Where env first, and lang runtime next.
 - Expressions in where clause cannot create an inner scope again. Do we have to??
+
+
+Alternate Form
+---------------
+5.add.6.mul.2
+
+5.add.6.mul.b where {b: 6.add.5}
+
+[1,2,3,4,5].map(doubleMe)
+
+[1..10].filter.isOdd
+
+[1..10].forEach.someExp.collectValues
+
+defn.add
+    .match(number n1, number n2)
+    .body(
+        n1.add.n2
+    )
+    .match(list l1, * n2)
+    .body(
+        l1.append.n2
+    )
+
+defn add(number n1, number n2) = n1.add.n2
+defn add(list l1, * n2) = l1.append.n2
+
+
+defn add(number n1, number n2) = native("n1 + n2");
+
+==>
+(n1,n2) => n1 + n2;
