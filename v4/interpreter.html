@@ -15,15 +15,27 @@
     <script>
         var p1 = read("add x y = + x y z where z = 1");
         console.log(p1);
+       
         var e1 = new EXPR(p1);
         console.log(e1);
 
-        var e2 = read("pi = 3.14");
-        console.log(new EXPR(e2));
+        var e2 = new EXPR(read("pi = 3.14"));
+        console.log(e2);
 
         
-        var e3 = read("* 5 6");
-        console.log(new EXPR(e3));
+        var e3 = new EXPR(read("mul 5 6"));
+        console.log(e3);
+
+        var e4 = new EXPR(read("prod x y = mul x y"));
+        console.log(e4);
+
+         var e5 = read("prod x y = * x (add x y)");
+        console.log(new EXPR(e5));
+
+         console.log(e3.compute());
+         console.log(new EXPR(read("55")).compute());
+         console.log(new EXPR(read('"dinesh"')).compute());
+
     </script>
 </body>
 
