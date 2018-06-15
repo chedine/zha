@@ -266,37 +266,24 @@ function tokenize(token) {
 }
 
 function read(program) {
-    const ast = readExpr(program, 0, new ZHATYPE.ZhaList([]));
+    const ast = [];
+    read1(program, ast , 0);
     return ast;
 }
 
-function readExpr(program, startPos, ast) {
-    i = startPos;
-    let readingQuotes = false,
-        readingBraces = false,
-        readingParens = false;
-    var tokens = [];
-    var token = '';
-    var nested = [];
+function read1(program, collector, pos) {
     const addToken = token => {
         if (token.trim().length === 0) {
             return;
         }
-        var typedToken = tokenize(token);
+        var typedToken = tokenize(token.trim());
+        collector.push(typedToken);
 
-        if (token.trim() === 'where') {
-            tokens.push(typedToken);
-            token = '';
-            tokens.push([]);
-            nested.push(tokens.length - 1);
-        } else if (nested.length === 0) {
-            tokens.push(typedToken);
-        } else {
-            tokens[nested[nested.length - 1]].push(typedToken);
-        }
     }
-    for (i = startPos; i < program.trim().length; i++) {
-        const char = program.charAt(i);
+    let readingQuotes = false;
+    let token = '';
+    for (var i = (pos | 0); i < program.length; i++) {
+        var char = program[i];
         if (char === '"') {
             readingQuotes = !readingQuotes;
             token = token + char;
@@ -305,24 +292,24 @@ function readExpr(program, startPos, ast) {
         if (readingQuotes) {
             token = token + char;
         } else {
-            if (char === '[') {
-                readingBraces = true;
-            } else if (char === ']') {
-                readingBraces = false;
-            } else if (char === '(') {
-                readingParens = true;
+            if (char === '.' || char === ' ' || char === '\t' || char === '\n' || char === '\r') {
                 addToken(token);
+                if (token.trim() === 'where') {
+                    var innerCollector = [];
+                    var end = read1(program, innerCollector, i + 1);
+                    collector.push(innerCollector);
+                    i = end;
+                }
                 token = '';
-                tokens.push([]);
-                nested.push(tokens.length - 1);
+            }
+            if (char === '(') {
+                var innerCollector = [];
+                var end = read1(program, innerCollector, i + 1);
+                collector.push(innerCollector);
+                i = end;
             } else if (char === ')') {
-                readingParens = false;
                 addToken(token);
-                token = '';
-                nested.pop();
-            } else if (char === '.' || char === ' ' || char === '\t' || char === '\n' || char === '\r') {
-                addToken(token);
-                token = '';
+                return i + 1;
             } else {
                 token = token + char;
             }
@@ -331,7 +318,7 @@ function readExpr(program, startPos, ast) {
     if (token.trim().length > 0) {
         addToken(token)
     }
-    return tokens;
+    return i;
 }
 
 function evaluate(expr) {
@@ -413,7 +400,8 @@ function print(result) {
 }
 
 function run(srcStr) {
-    return evaluate(new EXPR(read(srcStr)));
+    var ast = read(srcStr);
+    return evaluate(new EXPR(ast));
 }
 
 function REPL() {
@@ -421,3 +409,4 @@ function REPL() {
 }
 
 function test() {}
+

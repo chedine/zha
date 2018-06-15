@@ -14,11 +14,12 @@
         <textarea cols="80" rows="3" id="programResults"></textarea>-->
     <script>
         var log = console.log;
-        var p1 = read("add x y = + x y z where z = 1");
-        console.log(p1);
+        var ast = [];
+        var p1 = read1("add x y = + x y z where z = 1", ast, 0);
        
-        var e1 = new EXPR(p1);
+        var e1 = new EXPR(ast);
         console.log(e1);
+/**        console.log(new EXPR(read("add x y = + x y z where z = 1")));
 
         var e2 = new EXPR(read("pi = 3.14"));
         console.log(e2);
@@ -30,11 +31,11 @@
         var e4 = new EXPR(read("prod x y = mul x y"));
         console.log(e4);
 
-         var e5 = read("prod x y = * x (add x y)");
+         var e5 = read("nested n = add n (add 3 (add 3 n))");
         console.log(new EXPR(e5));
         
         var e6 = ('isAdult age = if (> age 18) true false');
-
+**/
          log(run("5"));
          log(run('"dinesh"'));
          log(run("prod x y = mul x y"));
@@ -42,6 +43,8 @@
          log(run("threes x y z = add x (add y z)"));
          log(run("threes1 = threes 2 3"));
          log(run("threes1 2"));
+         log(run(('isAdult age = if (> age 18) true false')));
+         
     </script>
 </body>
 
