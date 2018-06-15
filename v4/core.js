@@ -9,7 +9,6 @@ const curry = f => {
  */
 const ZHATYPE = function () {
     return {
-
         ZhaNumber: function (noLiteral) {
             this.value = noLiteral;
             this.isNumber = function () {
@@ -132,7 +131,9 @@ const RT = function () {
                 return ZHATYPE.isFn(truthyPath) ? truthyPath() : truthyPath;
             }
             return false;
-        }, ["pred", "truthyPath"])
+        }, ["pred", "truthyPath"]),
+        ">": makeForeignFn1((left, right) => left > right),
+        "<": makeForeignFn1((left, right) => left < right)
     }
 }();
 const ENVIRONMENT = function (runtime, root) {
@@ -190,6 +191,22 @@ function addToExpr(parentExpr, expr) {
     }
 }
 
+function cloneExpr(blueprint, args) {
+    var expr = new EXPR([]);
+    expr.expr = blueprint.expr.slice();
+    expr.env = Object.assign({}, blueprint.env);
+    expr.params = blueprint.params.slice();
+    expr.name = blueprint.name;
+    expr.fn = blueprint.fn;
+    expr.paramFilled = blueprint.paramFilled + args.length;
+    var methodScope = expr.env;
+    for (i = 0; i < args.length; i++) {
+        methodScope[expr.params[i].value] = args[i];
+    }
+    expr.env = methodScope;
+    return expr;
+}
+
 function EXPR(list) {
     this.expr = [];
     this.env = {};
@@ -197,6 +214,7 @@ function EXPR(list) {
     this.name = undefined;
     this.def = false;
     this.fn = false;
+    this.paramFilled = 0;
     var i = 0,
         j = 0;
     var where = 0,
@@ -217,6 +235,7 @@ function EXPR(list) {
         this.name = list[0];
         this.params = list.slice(1, j);
         this.def = true;
+        this.fn = this.params.length > 0; // what about 0 arg fns?
         //this.expr = list.slice(j+1, i);
         addToExpr(this, list.slice(j + 1, i));
     } else {
@@ -225,56 +244,16 @@ function EXPR(list) {
     }
     for (i = i + 1; i < list.length; i++) {
         this.env[list[i][0]] = new EXPR(list[i]);
-    }
-    this.compute = function (scope) {
+    };
+    this.isLiteral = function () {
+        return this.expr.length === 1;
+    };
+    this.isSplForm = function () {
         var token = this.expr[0];
-        //var env = new ENVIRONMENT(this.env, scope? scope: ENV);
-        var env = new ENVIRONMENT(RT, undefined);
-        if(this.def){
-            return this.define();
+        if (ZHATYPE.isSymbol(token)) {
+            return (token.value === "if");
         }
-        var val = evaluateToken(token, env);
-        if (this.expr.length > 1) {
-            var args = [];
-            for (var i = 1; i < this.expr.length; i++) {
-                args.push(evaluateToken(this.expr[i], env));
-            }
-            if(ZHATYPE.isFn){
-                val = val.invoke(args);
-            }
-            else{
-                val = val.compute(this.paramsEnv(args));
-            }
-        }
-        return val;
-    };
-    this.define = function(env){
-        env.define(this.name, this);
-        return env.lookup(this.name);
-    };
-    this.paramsEnv = function (args) {
-        var env = {};
-        if (Array.isArray(args)){
-            for (var i = 0; i < args.length; i++) {
-                env[this.params[i].value] = args[i]; 
-            }
-        }else{
-            console.log("TODO1");
-        }
-        return env;
-    };
-    this.evalToken = function (token, env) {
-        if (isExpression(token)) {
-            val = token.compute(env);
-        } else if (ZHATYPE.isSymbol(token)) {
-            val = env.lookup(token);
-            /**if (isExpression(val)) {
-                val = evaluateExprUnderEnv(val, env);
-            }**/
-        } else if (ZHATYPE.isAtom(token)) {
-            val = token.value;
-        }
-        return val;
+        return false;
     }
 }
 
@@ -360,15 +339,37 @@ function evaluate(expr) {
 }
 
 function evaluateUnderEnv(expr, env) {
+    var expressionResult = expr.def && expr.fn ? expr : evaluateExprUnderEnv(expr, env);
     if (expr.def) {
-        env.define(expr.name, expr);
+        env.define(expr.name, expressionResult);
         return env.lookup(expr.name);
     }
-    var expressionResult = evaluateExprUnderEnv(expr, env);
     return expressionResult;
 }
 
+function evalSplFormExpr(expr, env) {
+    var token = expr.expr[0];
+    var val = undefined;
+    if (ZHATYPE.isSymbol(token) && token.value === "if") {
+        var args = [];
+        for (var i = 1; i < expr.expr.length; i++) {
+            args.push(evaluateToken(expr.expr[i], env));
+        }
+        if (args[0] === true) {
+            val = args[1];
+        } else {
+            val = args.length > 2 ? args[2] : false;
+        }
+    }
+    return val;
+}
+
 function evaluateExprUnderEnv(expr, env) {
+    if (expr.isLiteral()) {
+        return evaluateToken(expr.expr[0], env);
+    } else if (expr.isSplForm()) {
+        return evalSplFormExpr(expr, env);
+    }
     var token = expr.expr[0];
     var val = evaluateToken(token, env);
     if (expr.expr.length > 1) {
@@ -376,7 +377,22 @@ function evaluateExprUnderEnv(expr, env) {
         for (var i = 1; i < expr.expr.length; i++) {
             args.push(evaluateToken(expr.expr[i], env));
         }
-        val = val.invoke(args);
+        if (isExpression(val)) {
+            if (val.paramFilled + args.length === val.params.length) {
+                var methodScope = Object.assign({}, val.env);
+                for (i = 0; i < args.length; i++) {
+                    var paramToFill = val.params[(val.paramFilled + i)].value;
+                    methodScope[paramToFill] = args[i];
+                }
+                val = evaluateExprUnderEnv(val, new ENVIRONMENT(methodScope, env));
+            } else {
+                val = cloneExpr(val, args);
+            }
+        } else {
+            //its a Zha fn
+            val = val.invoke(args);
+        }
+
     }
     return val;
 }
@@ -386,9 +402,6 @@ function evaluateToken(token, env) {
         val = evaluateUnderEnv(token, env);
     } else if (ZHATYPE.isSymbol(token)) {
         val = env.lookup(token);
-        if (isExpression(val)) {
-            val = evaluateExprUnderEnv(val, env);
-        }
     } else if (ZHATYPE.isAtom(token)) {
         val = token.value;
     }

@@ -13,6 +13,7 @@
         </div>
         <textarea cols="80" rows="3" id="programResults"></textarea>-->
     <script>
+        var log = console.log;
         var p1 = read("add x y = + x y z where z = 1");
         console.log(p1);
        
@@ -31,11 +32,16 @@
 
          var e5 = read("prod x y = * x (add x y)");
         console.log(new EXPR(e5));
+        
+        var e6 = ('isAdult age = if (> age 18) true false');
 
-         console.log(e3.compute());
-         console.log(new EXPR(read("55")).compute());
-         console.log(new EXPR(read('"dinesh"')).compute());
-
+         log(run("5"));
+         log(run('"dinesh"'));
+         log(run("prod x y = mul x y"));
+         log(run("add 5 6"));
+         log(run("threes x y z = add x (add y z)"));
+         log(run("threes1 = threes 2 3"));
+         log(run("threes1 2"));
     </script>
 </body>
 
