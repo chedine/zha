@@ -133,7 +133,10 @@ const RT = function () {
             return false;
         }, ["pred", "truthyPath"]),
         ">": makeForeignFn1((left, right) => left > right),
-        "<": makeForeignFn1((left, right) => left < right)
+        "<": makeForeignFn1((left, right) => left < right),
+        "+": makeForeignFn1((left, right) => left + right),
+        "-": makeForeignFn1((left, right) => left - right),
+        "=": makeForeignFn1((left, right) => left === right)
     }
 }();
 const ENVIRONMENT = function (runtime, root) {
@@ -242,9 +245,28 @@ function EXPR(list) {
         //this.expr = list.slice(0, i);
         addToExpr(this, list.slice(0, i));
     }
-    for (i = i + 1; i < list.length; i++) {
-        this.env[list[i][0]] = new EXPR(list[i]);
-    };
+    /**for (i = i + 1; i < list.length; i++) {
+        this.env[list[i][0].value] = new EXPR(list[i]);
+    };**/
+    if(i < list.length){
+        //Meaning there is a where clause. Which is a list
+        //Break it down by comma
+        let whereBinding = list[i+1];
+        //TODO: Not an efficient way.. works for the prototyping
+        let declStart = 0;
+        for(k=0;k<whereBinding.length;k++){
+            if(whereBinding[k].value === ','){
+                const binding = whereBinding.slice(declStart,k);
+                this.env[binding[0].value] = new EXPR(binding);
+                declStart = k+1;
+            }
+        }
+        if(declStart < whereBinding.length){
+            //leftover
+            const binding = whereBinding.slice(declStart,whereBinding.length);
+            this.env[binding[0].value] = new EXPR(binding);
+        }
+    }
     this.isLiteral = function () {
         return this.expr.length === 1;
     };
@@ -267,7 +289,7 @@ function tokenize(token) {
 
 function read(program) {
     const ast = [];
-    read1(program, ast , 0);
+    read1(program, ast, 0);
     return ast;
 }
 
@@ -302,7 +324,7 @@ function read1(program, collector, pos) {
                 }
                 token = '';
             }
-            if (char === '(') {
+            else if (char === '(') {
                 var innerCollector = [];
                 var end = read1(program, innerCollector, i + 1);
                 collector.push(innerCollector);
@@ -338,14 +360,11 @@ function evalSplFormExpr(expr, env) {
     var token = expr.expr[0];
     var val = undefined;
     if (ZHATYPE.isSymbol(token) && token.value === "if") {
-        var args = [];
-        for (var i = 1; i < expr.expr.length; i++) {
-            args.push(evaluateToken(expr.expr[i], env));
-        }
-        if (args[0] === true) {
-            val = args[1];
+        let predicate = evaluateToken(expr.expr[1], env);
+        if (predicate === true) {
+            val = evaluateToken(expr.expr[2], env);
         } else {
-            val = args.length > 2 ? args[2] : false;
+            val = expr.expr.length > 3 ? evaluateToken(expr.expr[3], env) : false;
         }
     }
     return val;
@@ -371,7 +390,15 @@ function evaluateExprUnderEnv(expr, env) {
                     var paramToFill = val.params[(val.paramFilled + i)].value;
                     methodScope[paramToFill] = args[i];
                 }
-                val = evaluateExprUnderEnv(val, new ENVIRONMENT(methodScope, env));
+                var scope = new ENVIRONMENT(methodScope, env);
+                var envClone = {};
+                //Set env based on where clause
+                for (prop in val.env) {
+                    if (isExpression(val.env[prop])) {
+                        envClone[prop] = evaluateExprUnderEnv(val.env[prop], new ENVIRONMENT(envClone, scope));
+                    }
+                }
+                val = evaluateExprUnderEnv(val, new ENVIRONMENT(envClone, scope));
             } else {
                 val = cloneExpr(val, args);
             }
@@ -409,4 +436,3 @@ function REPL() {
 }
 
 function test() {}
-
