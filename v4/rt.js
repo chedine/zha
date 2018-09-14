@@ -101,7 +101,10 @@ const RT = function () {
      "+" : (a,b) => new ZHATYPE.ZhaNumber(a.value +b.value),
      "-" : (a,b) => new ZHATYPE.ZhaNumber(a.value - b.value),
      "*" : (a,b) => new ZHATYPE.ZhaNumber(a.value * b.value),
-     "/" : (a,b) => new ZHATYPE.ZhaNumber(a.value / b.value)
+     "/" : (a,b) => new ZHATYPE.ZhaNumber(a.value / b.value),
+     "<" : (a,b) => new ZHATYPE.ZhaBoolean(a.value < b.value),
+     "<=" : (a,b) => new ZHATYPE.ZhaBoolean(a.value <= b.value),
+     ">" : (a,b) => new ZHATYPE.ZhaBoolean(a.value > b.value)
     }
 }();
 //ENV

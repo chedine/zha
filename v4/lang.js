@@ -49,6 +49,9 @@ function read1(program, collector, pos) {
                 return i;// + 1;
             } 
             else if (char === ',') {
+            	if(token.trim().length >0){
+            		addToken(token.trim());
+            	}
                 addToken(',');
                 token = '';
             }
@@ -110,7 +113,7 @@ function parseWhere(whereExpr) {
 	for (var i = 0; i < whereExpr.length; i++) {
 		var token = whereExpr[i];
 		if (token.value === ',') {
-			var bindingDecl = whereExpr.slice(start, i + 1);
+			var bindingDecl = whereExpr.slice(start, i);
 			bindings.push(parseExpr(bindingDecl, false));
 			start = i + 1; // +1 ignores the comma char/token
 		}
@@ -164,6 +167,8 @@ function eval(src){
 	return results;
 }
 
+// ------------- EVALUATOR ------------------------------------------------------------
+
 function evalAST(ast, env){
 	
 	var bindings = ast[2];
@@ -194,21 +199,41 @@ function fixScope(bindings, env){
 	 var scope = new ENVIRONMENT({}, env);
 	 for(var i=0; i< bindings.length;i++){
 		 var name = bindings[i][0];
-		 console.log("Fixing scope for ", name, bindings[i]);
+		// console.log("Fixing scope for ", name, bindings[i]);
 		 var result = evalAST(bindings[i], scope);
-		 scope.define(name, result);
+		// scope.define(name, result);
 	 }
 	 return scope;
 }
 
 function evalForm(form, env){
 //	var body = ast[3];
+	if(!Array.isArray(form)){
+		return evalAtom(form, env);
+	}
 	if(form.length === 1){
 		return evalAtom(form[0], env);
+	}
+	else if(isSplDirective(form[0].value)){
+		return evalSplDirective(form, env);
 	}
 	return evalFnApplication(form,env);
 }
 
+function isSplDirective(token){
+	return token === "if";
+}
+function evalSplDirective(form,env){
+	var directive = form[0];
+	if(directive.value === 'if'){
+		var predicate = evalForm(form[1],env);
+		if(predicate.value === true){
+			return evalForm(form[2], env);
+		}else{
+			return evalForm(form[3], env);
+		}
+	}
+}
 function evalFnApplication(form, env){
 	var operation = form[0];
 	var operands = form.slice(1);
