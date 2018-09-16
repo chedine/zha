@@ -15,15 +15,24 @@
         </div>
         <textarea cols="80" rows="3" id="programResults"></textarea>-->
     <script>
-      console.log("4" , eval("4"));
-	  console.log("x = 5" , eval("x = 5"));
-	  console.log("x" , eval("x"));
-	  console.log("* 5 4", eval("* 5 4"));
-	  console.log("* x (+ x 4)", eval("* x (+ x 4)"));
-	  console.log("* y z where z = 2 , y = 1" , eval("* y z where z = 2 , y = 1"));
-	  console.log("if true true false", eval("if true true false"));
-	  console.log("if (< 5 6) true false", eval("if (< 5 6) true false"));
-	  console.log("if (> 5 6) true false", eval("if (> 5 6) true false"));
+
+      function runTest(src){
+          console.log(src, eval(src));
+      }
+
+      runTest("4");
+      runTest("x = 5")
+      runTest("* 5 4")
+      runTest("* x (+ x 4)");
+      runTest("* y z where z = 2 , y = 1");
+      runTest("if true true false");
+      runTest("if (< 5 6) true false");
+      runTest("if (> 5 6) true false");
+      runTest("add x y = + x y");
+      runTest("add 1 2");
+      runTest("add x y where x = 1 , y = 2");
+      runTest('greeter n = + "Hi " n');
+      runTest('loop (list "dinesh" "smriti") greeter');
     </script>
 </body>
 

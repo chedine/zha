@@ -31,8 +31,8 @@ const ZHATYPE = function () {
         },
         ZhaFn: function (fn) {
             this.value = fn;
-            this.invoke = function (args) {
-                var returnVal = this.value.apply(undefined, args);
+            this.invoke = function (env, args) {
+                var returnVal = this.value.apply(undefined,[env,args]);
                 return returnVal;
             };
             this.toString = function () {
@@ -104,7 +104,11 @@ const RT = function () {
      "/" : (a,b) => new ZHATYPE.ZhaNumber(a.value / b.value),
      "<" : (a,b) => new ZHATYPE.ZhaBoolean(a.value < b.value),
      "<=" : (a,b) => new ZHATYPE.ZhaBoolean(a.value <= b.value),
-     ">" : (a,b) => new ZHATYPE.ZhaBoolean(a.value > b.value)
+     ">" : (a,b) => new ZHATYPE.ZhaBoolean(a.value > b.value),
+     "eq" : (a,b) => new ZHATYPE.ZhaBoolean(a.value === b.value),
+     "list" : function(...rest) {
+         return new ZHATYPE.ZhaList(rest);
+     }
     }
 }();
 //ENV

@@ -3,11 +3,6 @@
 
 <title>Zha Editor</title>
 <meta charset="utf-8"/>
-<link rel="stylesheet" href="editor/codemirror.css">
-<link rel="stylesheet" href="editor/midnight.css">
-<link rel="stylesheet" href="editor/solarized.css">
-<script src="editor/codemirror.js"></script>
-<script src="editor/vim.js"></script>
 <style type="text/css">
  #console {
       position: absolute;
@@ -81,14 +76,31 @@
         startPrompt();
       });
 	  function prettyPrint(zhaVal){
-	  console.log(zhaVal.value);
-		//return JSON.stringify(zhaVal.value);
-		return zhaVal.value;
-	  }
-	  function isABalancedZhaExpr (input) {
-		//return input.trim().charAt(input.length-1) !== ';';
-		return false;
-	 }
+    //	  console.log(zhaVal.value);
+        //return JSON.stringify(zhaVal.value);
+        if(zhaVal === undefined || zhaVal === null){
+            return "Nil";
+        }
+        if(ZHATYPE.isList(zhaVal)){
+            var r = zhaVal.value;
+            var output = '[ ';
+            for(var i=0;i<r.length;i++){
+                output += (prettyPrint(r[i]) + ' ')
+            }
+            output += ']';
+            return output;
+        }
+        else if(ZHATYPE.isFn(zhaVal)){
+            return "F()";
+        }
+        else{
+            return zhaVal.value;
+        }
+		//return zhaVal !==undefined ? zhaVal.value : "Nil";
+      }
+      function isABalancedZhaExpr(){
+          return false;
+      }
     </script>
 <body>
 </body>

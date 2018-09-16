@@ -4,72 +4,72 @@ function read(program) {
 	 * Each valid form must be separated by ;
 	 * Returns a list of lists. Each item in the return list represents a form.
 	 */
-    const asts = [];
-    var i = 0;
-    while(i < program.length){
-    	var ast = [];
-    	 i = read1(program, ast, i);
-    	 asts.push(ast);
-    }
-    return asts;
+	const asts = [];
+	var i = 0;
+	while (i < program.length) {
+		var ast = [];
+		i = read1(program, ast, i);
+		asts.push(ast);
+	}
+	return asts;
 }
 
 function read1(program, collector, pos) {
-    const addToken = token => {
-        if (token.trim().length === 0) {
-            return;
-        }
-        var typedToken = ZHATYPE.typeIfy(token.trim()); // token.trim(); //tokenize(token.trim());
-        collector.push(typedToken);
+	const addToken = token => {
+		if (token.trim().length === 0) {
+			return;
+		}
+		var typedToken = ZHATYPE.typeIfy(token.trim()); // token.trim(); //tokenize(token.trim());
+		collector.push(typedToken);
 
-    }
-    let readingQuotes = false;
-    let token = '';
-    for (var i = (pos | 0); i < program.length; i++) {
-        var char = program[i];
-        if (char === '"') {
-            readingQuotes = !readingQuotes;
-            token = token + char;
-            continue;
-        }
-        if (readingQuotes) {
-            token = token + char;
-        } else {
-            if (char === '.' || char === ' ' || char === '\t' || char === '\n' || char === '\r') {
-                addToken(token);
-                token = '';
-            }
-            else if (char === '(') {
-                var innerCollector = [];
-                var end = read1(program, innerCollector, i + 1);
-                collector.push(innerCollector);
-                i = end;
-            } else if (char === ')') {
-                addToken(token);
-                return i;// + 1;
-            } 
-            else if (char === ',') {
-            	if(token.trim().length >0){
-            		addToken(token.trim());
-            	}
-                addToken(',');
-                token = '';
-            }
-            else if (char === ';') {
-                if(token.trim().length > 0){
-                	addToken(token);
-                }
-                return i+1;
-            } 
-            else {
-                token = token + char;
-            }
-        }
-    }
-    if (token.trim().length > 0) {
-        addToken(token)
-    }
-    return i;
+	}
+	let readingQuotes = false;
+	let token = '';
+	for (var i = (pos | 0); i < program.length; i++) {
+		var char = program[i];
+		if (char === '"') {
+			readingQuotes = !readingQuotes;
+			token = token + char;
+			continue;
+		}
+		if (readingQuotes) {
+			token = token + char;
+		} else {
+			if (char === ' ' || char === '\t' || char === '\n' || char === '\r') {
+				addToken(token);
+				token = '';
+			}
+			else if (char === '(') {
+				var innerCollector = [];
+				var end = read1(program, innerCollector, i + 1);
+				collector.push(innerCollector);
+				i = end;
+			} else if (char === ')') {
+				addToken(token);
+				return i;// + 1;
+			}
+			else if (char === ',') {
+				if (token.trim().length > 0) {
+					addToken(token.trim());
+				}
+				addToken(',');
+				token = '';
+			}
+			else if (char === ';') {
+				if (token.trim().length > 0) {
+					addToken(token);
+				}
+				return i + 1;
+			}
+			else {
+				token = token + char;
+			}
+		}
+	}
+	if (token.trim().length > 0) {
+		addToken(token)
+	}
+	return i;
 }
 // PARSER
 function parse(expr) {
@@ -157,110 +157,165 @@ function printParsedExpr(parsed) {
 
 }
 
-function eval(src){
+function eval(src) {
 	var forms = read(src);
 	var results = [];
-	for(var i=0;i<forms.length; i++){
+	for (var i = 0; i < forms.length; i++) {
 		var ast = parse(forms[i]);
-		results.push(evalAST(ast , ENV));
+		results.push(evalAST(ast, ENV));
 	}
 	return results;
 }
 
 // ------------- EVALUATOR ------------------------------------------------------------
+//AST is a list [name [params] [bindings] [body]]
+//List of 4 elements.
+function evalAST(ast, env) {
 
-function evalAST(ast, env){
-	
 	var bindings = ast[2];
 	var name = ast[0];
 	var params = ast[1];
 	var isFn = name !== undefined && (params !== undefined && params.length > 0)
-	if(!isFn){
+	if (!isFn) {
 		var lexScope = fixScope(bindings, env);
-		var result =  evalForm(ast[3], lexScope);
-		if(name !== undefined){
+		var result = evalForm(ast[3], lexScope);
+		if (name !== undefined) {
 			//x = expr type
 			//Eval expr and assign it to X
 			env.define(name, result);
 			return name;
 		}
-		else{
+		else {
 			// expr type
 			//Just eval expr and return result
 			return result;
 		}
 	}
-}
+	else {
+		//A function declaration form
+		const fnArgs = params;
+		const fnBody = ast[3];
+		const fnBindings = ast[2];
 
-function fixScope(bindings, env){
+		const fnDefn = new ZHATYPE.ZhaFn((callerEnv, args) => {
+			//Args is a array of two elements
+			//1 is the caller env, 2 is the actual args to this fn
+			const fnEnv = new ENVIRONMENT({}, callerEnv);
+			for (var i = 0; i < fnArgs.length; i++) {
+				fnEnv.define(fnArgs[i], args[i]);
+			}
+			var lexScope = fixScope(fnBindings, fnEnv);
+			var result = evalForm(fnBody, lexScope);
+			return result;
+		});
+		env.define(name, fnDefn);
+		return fnDefn;
+	}
+}
+/**
+function evalWithBindings(name, bindings,  body, env){
+	var lexScope = fixScope(bindings, env);
+	var result = evalForm(body, lexScope);
+	if (name !== undefined) {
+		//x = expr type
+		//Eval expr and assign it to X
+		env.define(name, result);
+		return name;
+	}
+	else {
+		// expr type
+		//Just eval expr and return result
+		return result;
+	}
+}**/
+function fixScope(bindings, env) {
 	/**
 	 * For each binding. evaluate the body and create a closure over the base env.
 	 */
-	 var scope = new ENVIRONMENT({}, env);
-	 for(var i=0; i< bindings.length;i++){
-		 var name = bindings[i][0];
+	var scope = new ENVIRONMENT({}, env);
+	for (var i = 0; i < bindings.length; i++) {
+		var name = bindings[i][0];
 		// console.log("Fixing scope for ", name, bindings[i]);
-		 var result = evalAST(bindings[i], scope);
+		var result = evalAST(bindings[i], scope);
 		// scope.define(name, result);
-	 }
-	 return scope;
+	}
+	return scope;
 }
 
-function evalForm(form, env){
-//	var body = ast[3];
-	if(!Array.isArray(form)){
+function evalForm(form, env) {
+	//	var body = ast[3];
+	if (!Array.isArray(form)) {
 		return evalAtom(form, env);
 	}
-	if(form.length === 1){
+	if (form.length === 1) {
 		return evalAtom(form[0], env);
 	}
-	else if(isSplDirective(form[0].value)){
+	else if (isSplDirective(form[0].value)) {
 		return evalSplDirective(form, env);
 	}
-	return evalFnApplication(form,env);
+	return evalFnApplication(form, env);
 }
 
-function isSplDirective(token){
-	return token === "if";
+function isSplDirective(token) {
+	return token === "if" || token === "loop";
 }
-function evalSplDirective(form,env){
+function evalSplDirective(form, env) {
 	var directive = form[0];
-	if(directive.value === 'if'){
-		var predicate = evalForm(form[1],env);
-		if(predicate.value === true){
+	if (directive.value === 'if') {
+		var predicate = evalForm(form[1], env);
+		if (predicate.value === true) {
 			return evalForm(form[2], env);
-		}else{
+		} else if (form.length === 4) {
 			return evalForm(form[3], env);
 		}
+	}else if(directive.value === 'loop'){
+		var list = evalForm(form[1] , env);
+		var block = evalForm(form[2] , env);
+		//To support both native Array and ZhaList
+		//TODO: Remove when we only support ZhaList
+		var iterable = ZHATYPE.isList(list) ? list.value : list;
+		var results = [];
+		var state = evalForm(form[3], env);
+		for(var i=0;i<iterable.length;i++){
+			state = evalFnApplication([block, iterable[i], state] , env);
+			results.push(state);
+		}
+		return new ZHATYPE.ZhaList(results);
 	}
 }
-function evalFnApplication(form, env){
+function evalFnApplication(form, env) {
 	var operation = form[0];
 	var operands = form.slice(1);
 	var args = [];
-	for(var i=0;i<operands.length;i++){
+	for (var i = 0; i < operands.length; i++) {
 		//TODO: Decide if pushing the raw value or ZHA type make sense
 		//Right now, we push Zha type and let the function retrieve value from it.
 		var val = operands[i]; //.value;
-		if(ZHATYPE.isSymbol(val)){
+		if (ZHATYPE.isSymbol(val)) {
 			val = evalAtom(val, env);
-		}else if(ZHATYPE.isList(val)){
+		} else if (ZHATYPE.isList(val)) {
 			val = evalForm(val, env);
 		}
 		/**
 		 * TODO: This arry type check should go away if we can have the AST type as ZhaList (like lisp's homoiconicity)
 		 */
-		else if(Array.isArray(val)){
+		else if (Array.isArray(val)) {
 			val = evalForm(val, env);
 		}
 		args.push(val);
 	}
 	var resolvedOP = env.lookup(operation);
-	return resolvedOP.apply( undefined , args);
+	if (ZHATYPE.isFn(resolvedOP)) {
+		return resolvedOP.invoke(env, args);
+	}
+	//TODO: This is not needed if everything is a ZHAFn
+	//Having it here for now to support both ZhaFn and regular functions(JS)
+	//until things stabilize.
+	return resolvedOP.apply(undefined, args);
 }
 
-function evalAtom(atom, env){
-	if(ZHATYPE.isSymbol(atom)){
+function evalAtom(atom, env) {
+	if (ZHATYPE.isSymbol(atom)) {
 		//TODO: This could be a function
 		return env.lookup(atom);
 	}

@@ -1,0 +1,21 @@
+<html>
+    <head>
+
+    </head>
+    <body>
+        <script src="rt.js"></script>
+        <script src="lang.js"></script>
+        <script>
+        function parseTests(){
+
+        }
+        function readerTests(){
+            console.assert(read("x")[0].length === 1, "Reader: x" );
+            console.assert(read("* x y")[0].length === 3, "Reader: * x y" );
+            console.assert(read("x = 5")[0].length === 3, "Reader: x = 5" );
+            console.assert(read("x = add a b where a = 1, b = 1")[0].length === 13, "Reader: x = add a b where a = 1, b = 1" );
+        }
+        readerTests();
+        </script>
+    </body>
+</html>
