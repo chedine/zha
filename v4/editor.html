@@ -1,111 +1,127 @@
-
 <!doctype html>
 
 <title>Zha Editor</title>
-<meta charset="utf-8"/>
+<meta charset="utf-8" />
 <style type="text/css">
- #console {
-      position: absolute;
-      width: 99%;
-      height: 95%;
-      background-color:black;
+    #console {
+        position: absolute;
+        width: 99%;
+        height: 95%;
+        background-color: black;
     }
+
     /* The inner console element. */
+
     .jqconsole {
         padding: 10px;
-		font-family: monospace;
-		font-size:14px;
+        font-family: monospace;
+        font-size: 14px;
     }
+
     /* The cursor. */
+
     .jqconsole-cursor {
         background-color: gray;
     }
+
     /* The cursor color when the console looses focus. */
+
     .jqconsole-blurred .jqconsole-cursor {
         background-color: #666;
     }
+
     /* The current prompt text color */
+
     .jqconsole-prompt {
-        color: white;//#0d0;
+        color: white; //#0d0;
     }
+
     /* The command history */
+
     .jqconsole-old-prompt {
         color: white;
         font-weight: normal;
     }
+
     /* The text color when in input mode. */
+
     .jqconsole-input {
         color: #dd0;
     }
+
     /* Previously entered input. */
+
     .jqconsole-old-input {
         color: #bb0;
         font-weight: normal;
     }
+
     /* The text color of the output. */
+
     .jqconsole-output {
         color: #dd0;
     }
-	.jqconsole-error{
-		color:red;
-	}
+
+    .jqconsole-error {
+        color: red;
+    }
 </style>
- <div id="console"></div>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js" type="text/javascript" charset="utf-8"></script>
-    <script src="editor/jqconsole.js" type="text/javascript" charset="utf-8"></script>
-	 <script src="mori.js"></script>
-	<script src="rt.js"></script>
-	<script src="lang.js"></script>
-    <script>
-      $(function () {
+<div id="console"></div>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="editor/jqconsole.js" type="text/javascript" charset="utf-8"></script>
+<script src="mori.js"></script>
+<script src="types.js"></script>
+<script src="rt.js"></script>
+<script src="lang.js"></script>
+<script>
+    $(function () {
         var jqconsole = $('#console').jqconsole('Hi\n', 'Zha/User>>> ');
         var startPrompt = function () {
-          // Start the prompt with history enabled.
-          jqconsole.Prompt(true, function (input) {
-            // Output input with the class jqconsole-output.
-			try{
-				var result = eval(input.trim())[0];
-				jqconsole.Write(prettyPrint(result)+'\n', 'jqconsole-output',false);
-			}
-			catch(err){
-				jqconsole.Write(err +'\n', 'jqconsole-error',false);
-			}
-            // Restart the prompt.
-            startPrompt();
-          }, isABalancedZhaExpr);
+            // Start the prompt with history enabled.
+            jqconsole.Prompt(true, function (input) {
+                // Output input with the class jqconsole-output.
+                try {
+                    var result = eval(input.trim())[0];
+                    jqconsole.Write(prettyPrint(result) + '\n', 'jqconsole-output', false);
+                }
+                catch (err) {
+                    jqconsole.Write(err + '\n', 'jqconsole-error', false);
+                }
+                // Restart the prompt.
+                startPrompt();
+            }, isABalancedZhaExpr);
         };
         startPrompt();
-      });
-	  function prettyPrint(zhaVal){
-    //	  console.log(zhaVal.value);
+    });
+    function prettyPrint(zhaVal) {
+        //	  console.log(zhaVal.value);
         //return JSON.stringify(zhaVal.value);
-        if(zhaVal === undefined || zhaVal === null){
+        if (zhaVal === undefined || zhaVal === null) {
             return "Nil";
         }
-        if(ZHATYPE.isList(zhaVal)){
+        if (_Zha$.isList(zhaVal)) {
             var r = mori.toJs(zhaVal.value);
             var output = '[ ';
-            for(var i=0;i<r.length;i++){
+            for (var i = 0; i < r.length; i++) {
                 output += (prettyPrint(r[i]) + ' ')
             }
             output += ']';
             return output;
         }
-        else if(ZHATYPE.isFn(zhaVal)){
+        else if (_Zha$.isFn(zhaVal)) {
             return "F()";
         }
-        else{
+        else {
             return zhaVal.value;
         }
-		//return zhaVal !==undefined ? zhaVal.value : "Nil";
-      }
-      function isABalancedZhaExpr(){
-          return false;
-      }
-    </script>
+        //return zhaVal !==undefined ? zhaVal.value : "Nil";
+    }
+    function isABalancedZhaExpr() {
+        return false;
+    }
+</script>
+
 <body>
 </body>
+
 </html>
-
-
-

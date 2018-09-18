@@ -19,7 +19,7 @@ function read1(program, collector, pos) {
 		if (token.trim().length === 0) {
 			return;
 		}
-		var typedToken = ZHATYPE.typeIfy(token.trim()); // token.trim(); //tokenize(token.trim());
+		var typedToken = _typeIfy(token.trim()); // token.trim(); //tokenize(token.trim());
 		collector.push(typedToken);
 
 	}
@@ -197,7 +197,7 @@ function evalAST(ast, env) {
 		const fnBody = ast[3];
 		const fnBindings = ast[2];
 
-		const fnDefn = new ZHATYPE.ZhaFn((callerEnv, args) => {
+		const fnDefn = new _Zha$.ZhaFn(( args, callerEnv) => {
 			//Args is a array of two elements
 			//1 is the caller env, 2 is the actual args to this fn
 			const fnEnv = new ENVIRONMENT({}, callerEnv);
@@ -270,17 +270,17 @@ function evalSplDirective(form, env) {
 		}
 	}else if(directive.value === 'loop'){
 		var list = evalForm(form[1] , env);
-		var block = evalForm(form[2] , env);
+		var block = form[2]; // evalForm(form[2] , env);
 		//To support both native Array and ZhaList
 		//TODO: Remove when we only support ZhaList
-		var iterable = ZHATYPE.isIterable(list) ? mori.toJs(list.value) : list;
+		var iterable = _Zha$.isList(list) ? list.value : list;
 		var results = [];
 		var state = evalForm(form[3], env);
 		for(var i=0;i<iterable.length;i++){
 			state = evalFnApplication([block, iterable[i], state] , env);
 			results.push(state);
 		}
-		return new ZHATYPE.makeIterable(results, list);
+		return new _Zha$.ZhaList(results);
 	}
 }
 function evalFnApplication(form, env) {
@@ -291,9 +291,9 @@ function evalFnApplication(form, env) {
 		//TODO: Decide if pushing the raw value or ZHA type make sense
 		//Right now, we push Zha type and let the function retrieve value from it.
 		var val = operands[i]; //.value;
-		if (ZHATYPE.isSymbol(val)) {
+		if (_Zha$.isSymbol(val)) {
 			val = evalAtom(val, env);
-		} else if (ZHATYPE.isList(val)) {
+		} else if (_Zha$.isList(val)) {
 			val = evalForm(val, env);
 		}
 		/**
@@ -304,12 +304,12 @@ function evalFnApplication(form, env) {
 		}
 		args.push(val);
 	}
-	if (ZHATYPE.isFn(operation)) {
-		return operation.invoke(env, args);
+	if(_Zha$.isFn(resolvedOP)){
+		return resolvedOP.invoke(args, env);
 	}
 	var resolvedOP = env.lookup(operation);
-	if (ZHATYPE.isFn(resolvedOP)) {
-		return resolvedOP.invoke(env, args);
+	if (_Zha$.isFn(resolvedOP)) {
+		return resolvedOP.invoke(args, env);
 	}
 	//TODO: This is not needed if everything is a ZHAFn
 	//Having it here for now to support both ZhaFn and regular functions(JS)
@@ -318,7 +318,7 @@ function evalFnApplication(form, env) {
 }
 
 function evalAtom(atom, env) {
-	if (ZHATYPE.isSymbol(atom)) {
+	if (_Zha$.isSymbol(atom)) {
 		//TODO: This could be a function
 		return env.lookup(atom);
 	}

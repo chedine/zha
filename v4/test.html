@@ -37,7 +37,7 @@
             l = l.conj(new _Zha$.ZhaNumber(2));
             test(l.count().value === 2, `Size should b 2, but ${l.count().value}`);
             //conj on list inserts at the top
-            test(l.nth(0).value === 2, `nth(0) should b 1, but ${l.nth(0).value}`);
+            test(l.nth(new _Zha$.ZhaNumber(0)).value === 2, `nth(0) should b 1, but `);
             test(l.last().value === 1, `last should b 2, but ${l.last().value}`);
             
             var atZero = l.get(new _Zha$.ZhaNumber(0),3);

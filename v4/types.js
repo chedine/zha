@@ -40,11 +40,11 @@ var _Zha$ =function types(){
 	}
 	class ZhaFn extends ZhaVal{
 		constructor(fn){
-			super(val);
+			super(fn);
 			this._meta = {type:5};
 		}
-		invoke(env, args){
-			var returnVal = this.value.apply(undefined,[env,args]);
+		invoke( args, env){
+			var returnVal = this.value.apply(undefined,[args,env]);
 			return returnVal;
 		}
 	}
@@ -63,7 +63,7 @@ var _Zha$ =function types(){
 			return mori.get(this.value, i.value, defaultValue);
 		}
 		nth(i){
-			return mori.nth(this.value,i);
+			return mori.nth(this.value,i.value);
 		}
 		last(){
 			return mori.last(this.value)
@@ -112,11 +112,30 @@ var _Zha$ =function types(){
 		isLiteral : (v) => v instanceof ZhaLiteral,
 		isSeq : (v) => v instanceof ZhaSeq,
 		isSymbol : (v) => v instanceof ZhaSymbol,
+		isList : (v) => v instanceof ZhaList,
+		isFn : (v) => v instanceof ZhaFn,
 		ZhaBoolean: ZhaBoolean,
 		ZhaNumber: ZhaNumber,
 		ZhaString: ZhaString,
 		ZhaList: ZhaList,
 		ZhaVec: ZhaVec,
-		ZhaRange: ZhaRange
+		ZhaRange: ZhaRange,
+		ZhaSymbol:ZhaSymbol,
+		ZhaFn:ZhaFn
 	}
 }();
+
+function _typeIfy (literal) {
+	if (literal === "true" || literal === '#T' || literal === true) {
+		return new _Zha$.ZhaBoolean(true);
+	} else if (literal === "false" || literal === '#F' || literal === false) {
+		return new _Zha$.ZhaBoolean(false);
+	} else if (!isNaN(parseFloat(literal))) {
+		return new _Zha$.ZhaNumber(parseFloat(literal));
+	} else if (literal.startsWith('"') && literal.endsWith('"')) {
+		//Remove quotes
+		return new _Zha$.ZhaString(literal.substring(1, literal.length - 1), 2);
+	} else {
+		return new _Zha$.ZhaSymbol(literal);
+	}
+}

@@ -4,7 +4,8 @@
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ramda/0.25.0/ramda.js"></script>
    <!-- <script src="core.js"></script>-->
-   <script src="mori.js"></script>
+    <script src="mori.js"></script>
+    <script src="types.js"></script>
 	<script src="rt.js"></script>
 	<script src="lang.js"></script>
     <script>
@@ -18,7 +19,7 @@
     <script>
 	  
 	  function print(val){
-		if(ZHATYPE.isIterable(val)){
+		if(_Zha$.isSeq(val)){
 			return mori.toJs(val.value);
 		}
 		else{

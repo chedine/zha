@@ -1,5 +1,5 @@
 //RT
-const ZHATYPE = function () {
+/**const ZHATYPE = function () {
     return {
         ZhaNumber: function (noLiteral) {
             this.value = noLiteral;
@@ -136,29 +136,29 @@ const ZHATYPE = function () {
         }
     }
 }();
+**/
 
 const RT = function () {
     return {
-     "+" : (a,b) => new ZHATYPE.ZhaNumber(a.value +b.value),
-     "-" : (a,b) => new ZHATYPE.ZhaNumber(a.value - b.value),
-     "*" : (a,b) => new ZHATYPE.ZhaNumber(a.value * b.value),
-     "/" : (a,b) => new ZHATYPE.ZhaNumber(a.value / b.value),
-     "<" : (a,b) => new ZHATYPE.ZhaBoolean(a.value < b.value),
-     "<=" : (a,b) => new ZHATYPE.ZhaBoolean(a.value <= b.value),
-     ">" : (a,b) => new ZHATYPE.ZhaBoolean(a.value > b.value),
-     "eq" : (a,b) => new ZHATYPE.ZhaBoolean(a.value === b.value),
-     "list" : function(...rest) {
-         return new ZHATYPE.ZhaList(rest);
-     },
-     "vec" : function(...rest){
-    	 return new ZHATYPE.ZhaVec(rest);
-     },
-     "conj": function(seq, el){
-    	 return seq.conj(el);
-     },
-     "get": function(seq, index){
-    	 return seq.get(index);
-     }
+        "+": (a, b) => new _Zha$.ZhaNumber(a.value + b.value),
+        "-": (a, b) => new _Zha$.ZhaNumber(a.value - b.value),
+        "*": (a, b) => new _Zha$.ZhaNumber(a.value * b.value),
+        "/": (a, b) => new _Zha$.ZhaNumber(a.value / b.value),
+        "<": (a, b) => new _Zha$.ZhaBoolean(a.value < b.value),
+        "<=": (a, b) => new _Zha$.ZhaBoolean(a.value <= b.value),
+        ">": (a, b) => new _Zha$.ZhaBoolean(a.value > b.value),
+        "eq": (a, b) => new _Zha$.ZhaBoolean(a.value === b.value),
+        "list": function (...rest) {
+            return new _Zha$.ZhaList(rest);
+        },
+        "vec": function (...rest) {
+            return new _Zha$.ZhaVec(rest);
+        },
+        "conj": (seq, el) => seq.conj(el),
+        "get": (seq, index) => seq.get(index),
+        "nth" : (seq, n) => seq.nth(n),
+        "count" : new _Zha$.ZhaFn((seq) => seq[0].count()),
+        "last" : new _Zha$.ZhaFn((seq) => seq[0].last()),
     }
 }();
 //ENV
@@ -171,7 +171,7 @@ const ENVIRONMENT = function (runtime, root) {
         this.bindings[_key] = runtime[prop];
     };
     this.lookup = function (symbol) {
-        var key = ZHATYPE.isSymbol(symbol) ? symbol.value : symbol;
+        var key = _Zha$.isSymbol(symbol) ? symbol.value : symbol;
         if (this.bindings.hasOwnProperty(key)) {
             return this.bindings[key];
         } else if (root !== undefined) {
@@ -182,7 +182,7 @@ const ENVIRONMENT = function (runtime, root) {
         }
     }
     this.isDefined = function (symbol) {
-        var key = ZHATYPE.isSymbol(symbol) ? symbol.value : symbol;
+        var key = _Zha$.isSymbol(symbol) ? symbol.value : symbol;
         if (this.bindings.hasOwnProperty(key)) {
             return true;
         }
