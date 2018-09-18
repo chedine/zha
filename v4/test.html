@@ -3,17 +3,54 @@
 
     </head>
     <body>
+        <script src="mori.js"></script>
         <script src="types.js"></script>
       
         <script>
+        var test = console.assert;
 		function literalTests(){
-			var n = new ZhaNumber(5);
-			console.assert(n.value ===5 ,"Number should be 5");
-			console.assert(n._meta.type ===1 ,"Number type should be 1");
+			var n = new _Zha$.ZhaNumber(5);
+			test(n.value ===5 ,"Number should be 5");
+            test(n._meta.type ===1 ,"Number type should be 1");
+            
+            var s = new _Zha$.ZhaString("dinesh");
+            test(s.value === "dinesh" ,"String should be dinesh");
+            test(s._meta.type ===2 ,"String type should be 2");
+            
+            var b = new _Zha$.ZhaBoolean(true);
+            test(b.value ,"Bool should be true");
+            test(b._meta.type ===3 ,"Bool type should be 3");
+            
+            test(_Zha$.isLiteral(n), "Should be a literal");
+            test(_Zha$.isLiteral(b), "Should be a literal");
+            test(_Zha$.isLiteral(s), "Should be a literal");
+
+            test(!_Zha$.isSeq(n), "Shouldn't be a Seq");
+            test(!_Zha$.isSymbol(b), "Should be a literal");
 		}
-		
+        
+        function listTests(){
+            var l = new _Zha$.ZhaList([new _Zha$.ZhaNumber(1)]);
+            test(l.count().value === 1, `Size should b 1, but ${l.count().value}`);
+            l.conj(new _Zha$.ZhaNumber(2)); // immutable
+            test(l.count().value === 1, `Size should b 1, but ${l.count().value}`);
+            l = l.conj(new _Zha$.ZhaNumber(2));
+            test(l.count().value === 2, `Size should b 2, but ${l.count().value}`);
+            //conj on list inserts at the top
+            test(l.nth(0).value === 2, `nth(0) should b 1, but ${l.nth(0).value}`);
+            test(l.last().value === 1, `last should b 2, but ${l.last().value}`);
+            
+            var atZero = l.get(new _Zha$.ZhaNumber(0),3);
+            //TODO: Failing test
+            //get API is get by value which needs equals impl on Zha types
+            test(atZero.value === 2, `last should b 2, but ${atZero.value}`);
+
+            l = l.trash();
+            test(l.count().value === 0, `Size should b 0, but ${l.count().value}`);
+        }
 		function typesTests(){
-			literalTests();
+            literalTests();
+            listTests();
 		}
         function main(){
 			typesTests();
