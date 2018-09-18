@@ -1,6 +1,7 @@
-
 var _Zha$ =function types(){
 	var _self = this;
+	const _internals = Symbol('_internals');
+	
 	class ZhaVal{
 		constructor(val){
 			this.value = val;
@@ -39,13 +40,32 @@ var _Zha$ =function types(){
 		}
 	}
 	class ZhaFn extends ZhaVal{
-		constructor(fn){
+		constructor(fn,name, args, curried= false){
 			super(fn);
-			this._meta = {type:5};
+			this._prefills = [];
+			this._meta = {type:5, name: name, args: args,curried:curried};
 		}
-		invoke( args, env){
-			var returnVal = this.value.apply(undefined,[args,env]);
-			return returnVal;
+		invoke( arrayOfArgs, env){
+			if(!this._meta.curried){
+				var returnVal = this.value.apply(undefined,[arrayOfArgs,env]);
+				return returnVal;
+			}
+			else{
+				var isFulfilled  = this._prefills.length + arrayOfArgs.length === this._meta.args.length;
+				if(isFulfilled){
+					var fullArgsList = this._prefills.concat(arrayOfArgs);
+					var returnVal = this.value.apply(undefined,[fullArgsList,env]);
+					return returnVal;
+				}
+				else{
+					const curried = new ZhaFn(this.value, this._meta.name, this._meta.args, true);
+					curried._prefills.concat(this._prefills);
+					for(var i=0;i<arrayOfArgs.length;i++){
+						curried._prefills.push(arrayOfArgs[i]);	
+					}
+					return curried;
+				}
+			}
 		}
 	}
 	class ZhaSeq extends ZhaVal{
@@ -126,9 +146,9 @@ var _Zha$ =function types(){
 }();
 
 function _typeIfy (literal) {
-	if (literal === "true" || literal === '#T' || literal === true) {
+	if (literal === "true" ||  literal === true) {
 		return new _Zha$.ZhaBoolean(true);
-	} else if (literal === "false" || literal === '#F' || literal === false) {
+	} else if (literal === "false" || literal === false) {
 		return new _Zha$.ZhaBoolean(false);
 	} else if (!isNaN(parseFloat(literal))) {
 		return new _Zha$.ZhaNumber(parseFloat(literal));
@@ -138,4 +158,9 @@ function _typeIfy (literal) {
 	} else {
 		return new _Zha$.ZhaSymbol(literal);
 	}
+}
+const curryz = f => {
+    const aux = (n, xs) =>
+        n === 0 ? f(...xs) : x => aux(n - 1, [...xs, x])
+    return aux(f.length, [])
 }

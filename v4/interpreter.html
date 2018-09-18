@@ -48,6 +48,12 @@
       runTest("add x y where x = 1 , y = 2");
       runTest('greeter n = + "Hi " n');
       runTest('loop (list "dinesh" "smriti") greeter');
+	  runTest("k = # 5"); //anonymous function
+	  runTest("+ (call k) 5");
+	  runTest("k1 = # (x) (+ x x)"); //anonymous function
+	  runTest("k1 5");
+	   runTest("add1 = curry add");
+	   runTest("(add1 3) 5"); //Curried function
     </script>
 </body>
 

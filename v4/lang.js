@@ -193,41 +193,12 @@ function evalAST(ast, env) {
 	}
 	else {
 		//A function declaration form
-		const fnArgs = params;
-		const fnBody = ast[3];
-		const fnBindings = ast[2];
-
-		const fnDefn = new _Zha$.ZhaFn(( args, callerEnv) => {
-			//Args is a array of two elements
-			//1 is the caller env, 2 is the actual args to this fn
-			const fnEnv = new ENVIRONMENT({}, callerEnv);
-			for (var i = 0; i < fnArgs.length; i++) {
-				fnEnv.define(fnArgs[i], args[i]);
-			}
-			var lexScope = fixScope(fnBindings, fnEnv);
-			var result = evalForm(fnBody, lexScope);
-			return result;
-		});
+		const fnDefn = createFn(undefined, params, ast[3], ast[2]);
 		env.define(name, fnDefn);
 		return fnDefn;
 	}
 }
-/**
-function evalWithBindings(name, bindings,  body, env){
-	var lexScope = fixScope(bindings, env);
-	var result = evalForm(body, lexScope);
-	if (name !== undefined) {
-		//x = expr type
-		//Eval expr and assign it to X
-		env.define(name, result);
-		return name;
-	}
-	else {
-		// expr type
-		//Just eval expr and return result
-		return result;
-	}
-}**/
+
 function fixScope(bindings, env) {
 	/**
 	 * For each binding. evaluate the body and create a closure over the base env.
@@ -257,7 +228,22 @@ function evalForm(form, env) {
 }
 
 function isSplDirective(token) {
-	return token === "if" || token === "loop";
+	return token === "if" || token === "loop" || token === '#';
+}
+function createFn(name, fnArgs, fnBody, fnBindings){
+	const fnDefn = new _Zha$.ZhaFn(( args, callerEnv) => {
+		//Args is a array of two elements
+		//1 is the caller env, 2 is the actual args to this fn
+		const fnEnv = new ENVIRONMENT({}, callerEnv);
+		for (var i = 0; i < fnArgs.length; i++) {
+			fnEnv.define(fnArgs[i], args[i]);
+		}
+		var lexScope = fixScope(fnBindings, fnEnv);
+		var result = evalForm(fnBody, lexScope);
+		return result;
+	}, name, fnArgs);
+	//env.define(name, fnDefn);
+	return fnDefn;
 }
 function evalSplDirective(form, env) {
 	var directive = form[0];
@@ -282,9 +268,21 @@ function evalSplDirective(form, env) {
 		}
 		return new _Zha$.ZhaList(results);
 	}
+	else if(directive.value === '#'){
+		//Anon function
+		const args = form.length === 3 ? form[1] : [];
+		const body = form.length === 3 ? form[2] : form[1];
+		
+		const fnDefn = createFn(undefined, args, body,[]);
+		return fnDefn;
+	}
 }
 function evalFnApplication(form, env) {
 	var operation = form[0];
+	if(Array.isArray(operation)){
+		//A form that needs to be resolved first
+		operation = evalForm(operation,env);
+	}
 	var operands = form.slice(1);
 	var args = [];
 	for (var i = 0; i < operands.length; i++) {
@@ -304,8 +302,8 @@ function evalFnApplication(form, env) {
 		}
 		args.push(val);
 	}
-	if(_Zha$.isFn(resolvedOP)){
-		return resolvedOP.invoke(args, env);
+	if(_Zha$.isFn(operation)){
+		return operation.invoke(args, env);
 	}
 	var resolvedOP = env.lookup(operation);
 	if (_Zha$.isFn(resolvedOP)) {
@@ -320,7 +318,8 @@ function evalFnApplication(form, env) {
 function evalAtom(atom, env) {
 	if (_Zha$.isSymbol(atom)) {
 		//TODO: This could be a function
-		return env.lookup(atom);
+		const resolved = env.lookup(atom);
+		return resolved;
 	}
 	return atom;
 }
