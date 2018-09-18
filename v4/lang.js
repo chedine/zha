@@ -273,14 +273,14 @@ function evalSplDirective(form, env) {
 		var block = evalForm(form[2] , env);
 		//To support both native Array and ZhaList
 		//TODO: Remove when we only support ZhaList
-		var iterable = ZHATYPE.isList(list) ? list.value : list;
+		var iterable = ZHATYPE.isIterable(list) ? mori.toJs(list.value) : list;
 		var results = [];
 		var state = evalForm(form[3], env);
 		for(var i=0;i<iterable.length;i++){
 			state = evalFnApplication([block, iterable[i], state] , env);
 			results.push(state);
 		}
-		return new ZHATYPE.ZhaList(results);
+		return new ZHATYPE.makeIterable(results, list);
 	}
 }
 function evalFnApplication(form, env) {
@@ -303,6 +303,9 @@ function evalFnApplication(form, env) {
 			val = evalForm(val, env);
 		}
 		args.push(val);
+	}
+	if (ZHATYPE.isFn(operation)) {
+		return operation.invoke(env, args);
 	}
 	var resolvedOP = env.lookup(operation);
 	if (ZHATYPE.isFn(resolvedOP)) {

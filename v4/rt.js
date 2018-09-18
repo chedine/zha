@@ -40,18 +40,53 @@ const ZHATYPE = function () {
             }
         },
         ZhaList: function (array) {
-            this.value = array !== undefined ? array : [];
+            this.value =  mori.isList(array)? array: mori.list.apply(undefined, array);
             this.type = 4;
             this.toString = function () {
-                return this.value;
-            }
+                return this.value.toString();
+            },
+            this.conj = function(el){
+        		return new ZHATYPE.ZhaList(mori.conj(this.value, el));
+        	},
+        	this.assoc = function(i, el){
+        		//i is a ZhaNumber
+        		return new ZHATYPE.ZhaList(mori.assoc(this.value, i.value, el));
+        	},
+        	this.dissoc = function(i, el){
+        		return new ZHATYPE.ZhaList(mori.dissoc(this.value, i.value, el));
+        	},
+        	this.get = function(i,defaultVal){
+        		return (mori.get(this.value, i.value, defaultVal));
+        	}
         },
-
+        ZhaVec: function(array) {
+        	//TODO: Expectes input to be an array
+        	this.value = mori.isVector(array)? array: mori.vector.apply(undefined, array);
+        	this.conj = function(el){
+        		return new ZHATYPE.ZhaVec(mori.conj(this.value, el));
+        	},
+        	this.assoc = function(i, el){
+        		//i is a ZhaNumber
+        		return new ZHATYPE.ZhaVec(mori.assoc(this.value, i.value, el));
+        	},
+        	this.dissoc = function(i, el){
+        		return new ZHATYPE.ZhaVec(mori.dissoc(this.value, i.value, el));
+        	},
+        	this.get = function(i,defaultVal){
+        		return (mori.get(this.value, i.value, defaultVal));
+        	}
+        },
         ZhaSymbol: function (symStr) {
             this.value = symStr;
             this.type = 5;
         },
-
+        makeIterable:function (arr , src){
+        	if(src instanceof ZHATYPE.ZhaList){
+        		return new ZHATYPE.ZhaList(arr);
+        	}else if(src instanceof ZHATYPE.ZhaVec){
+        		return new this.ZhaVec(arr);
+        	}
+        },
         isNumber: function (zhaAtom) {
             return zhaAtom instanceof this.ZhaNumber;
         },
@@ -61,11 +96,17 @@ const ZHATYPE = function () {
         isList: function (zhaAtom) {
             return zhaAtom instanceof this.ZhaList;
         },
+        isVec: function (zhaVal){
+        	return zhaVal instanceof this.ZhaVec;
+        },
         isString: function (zhaAtom) {
             return zhaAtom instanceof this.ZhaString;
         },
         isFn: function (zhaAtom) {
             return zhaAtom instanceof this.ZhaFn;
+        },
+        isIterable: function(zhaVal){
+        	return mori.isSeq(zhaVal.value) || (zhaVal instanceof this.ZhaVec);
         },
         isSymbol: function (zhaAtom) {
             return zhaAtom instanceof this.ZhaSymbol;
@@ -73,7 +114,7 @@ const ZHATYPE = function () {
         isTyped: function (value) {
             return value instanceof this.ZhaBoolean || value instanceof this.ZhaFn ||
                 value instanceof this.ZhaList || value instanceof this.ZhaNumber ||
-                value instanceof this.ZhaString || value instanceof this.ZhaSymbol
+                value instanceof this.ZhaString || value instanceof this.ZhaSymbol || value instanceof this.ZhaVec
         },
         isAtom: function (value) {
             return value instanceof this.ZhaBoolean || value instanceof this.ZhaNumber ||
@@ -108,6 +149,15 @@ const RT = function () {
      "eq" : (a,b) => new ZHATYPE.ZhaBoolean(a.value === b.value),
      "list" : function(...rest) {
          return new ZHATYPE.ZhaList(rest);
+     },
+     "vec" : function(...rest){
+    	 return new ZHATYPE.ZhaVec(rest);
+     },
+     "conj": function(seq, el){
+    	 return seq.conj(el);
+     },
+     "get": function(seq, index){
+    	 return seq.get(index);
      }
     }
 }();
