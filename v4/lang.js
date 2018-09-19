@@ -236,7 +236,14 @@ function createFn(name, fnArgs, fnBody, fnBindings){
 		//1 is the caller env, 2 is the actual args to this fn
 		const fnEnv = new ENVIRONMENT({}, callerEnv);
 		for (var i = 0; i < fnArgs.length; i++) {
-			fnEnv.define(fnArgs[i], args[i]);
+			if(fnArgs[i].value.startsWith("...")){
+				//Varargs..
+				const actualSym = new _Zha$.ZhaSymbol(fnArgs[i].value.substr(3));
+				fnEnv.define(actualSym , new _Zha$.ZhaList(args.slice(i)));
+				break;
+			}else{
+				fnEnv.define(fnArgs[i], args[i]);
+			}
 		}
 		var lexScope = fixScope(fnBindings, fnEnv);
 		var result = evalForm(fnBody, lexScope);

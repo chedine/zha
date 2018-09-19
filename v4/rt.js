@@ -9,6 +9,9 @@ const RT = function () {
         "<=": (a, b) => new _Zha$.ZhaBoolean(a.value <= b.value),
         ">": (a, b) => new _Zha$.ZhaBoolean(a.value > b.value),
         "eq": (a, b) => new _Zha$.ZhaBoolean(a.value === b.value),
+        "toUpper": (str) => new _Zha$.ZhaString(str.value.toUpperCase()),
+        "toLower": (str) => new _Zha$.ZhaString(str.value.toLowerCase()),
+        "substr": (str, from) => new _Zha$.ZhaString(str.value.substr(from.value)),
         "list": function (...rest) {
             return new _Zha$.ZhaList(rest);
         },
@@ -17,14 +20,30 @@ const RT = function () {
         },
         "conj": (seq, el) => seq.conj(el),
         "get": (seq, index) => seq.get(index),
-        "nth" : (seq, n) => seq.nth(n),
-        "count" : new _Zha$.ZhaFn((seq) => seq[0].count()),
-        "last" : new _Zha$.ZhaFn((seq) => seq[0].last()),
-        "call" : new _Zha$.ZhaFn((args, env) => args[0].invoke(args.slice(1), env)),
-        "curry" : new _Zha$.ZhaFn((args, env) => {
-        	const srcFunc = args[0];
-        	return new _Zha$.ZhaFn(srcFunc.value, srcFunc._meta.name, srcFunc._meta.args, true);
+        "nth": (seq, n) => seq.nth(n),
+        "count": new _Zha$.ZhaFn((seq) => seq[0].count()),
+        "last": new _Zha$.ZhaFn((seq) => seq[0].last()),
+        "call": new _Zha$.ZhaFn((args, env) => args[0].invoke(args.slice(1), env)),
+        "curry": new _Zha$.ZhaFn((args, env) => {
+            const srcFunc = args[0];
+            return new _Zha$.ZhaFn(srcFunc.value, srcFunc._meta.name, srcFunc._meta.args, true);
         }),
+        "|>": new _Zha$.ZhaFn((args, env) => {
+            const getPiped = (fnList) => {
+                return (_args, _env) => {
+                    let result = fnList[0].invoke(_args, _env);
+                    for (var i = 1; i < fnList.length; i++) {
+                        result = fnList[i].invoke([result], _env);
+                    }
+                    return result;
+                }
+            };
+            //TODO: To determine if it needs to be curried.
+            return new _Zha$.ZhaFn(getPiped(args), "_piped", args[0]._meta.args, false);
+        }),
+        
+        //Js Interop
+        "toJs" : (zha) => _Zha$.isLiteral(zha) ? zha.value : mori.toJs(zha.value),
     }
 }();
 //ENV
