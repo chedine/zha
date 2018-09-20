@@ -81,7 +81,7 @@
             jqconsole.Prompt(true, function (input) {
                 // Output input with the class jqconsole-output.
                 try {
-                    var result = eval(input.trim())[0];
+                    var result = Zha.eval(input.trim())[0];
                     jqconsole.Write(prettyPrint(result) + '\n', 'jqconsole-output', false);
                 }
                 catch (err) {

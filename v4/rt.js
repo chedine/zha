@@ -43,7 +43,31 @@ const RT = function () {
         }),
         
         //Js Interop
+        /**
+         * All unsafe ops. Deal with it
+         * TODO: Clean 'em up
+         */
         "toJs" : (zha) => _Zha$.isLiteral(zha) ? zha.value : mori.toJs(zha.value),
+        "js/new": (type, ...args) => {
+            let str = `new ${type.value}`;
+            if(args){
+                str += " (";
+                var stopper = args.length - 1;
+                for(var i=0;i<args.length;i++){
+                    str += args[i].value ;
+                    if(i < stopper){
+                        str += " , "
+                    }
+                }
+                str += " );";
+            } 
+            return (eval(str));
+        },
+        "js/call" : (obj, methodName , ...args) => obj[methodName].apply(undefined, args),
+        "js/prop" : (obj, prop) => obj[prop],
+        "js/prop!" : (obj, prop, val) => {obj[prop] = val; return obj},
+        "js/eval" : (str) => (eval(str)) , 
+
     }
 }();
 //ENV
@@ -89,3 +113,19 @@ const ENVIRONMENT = function (runtime, root) {
     }
 };
 const ENV = new ENVIRONMENT(RT, undefined);
+
+class Test{
+    constructor(v, v1){
+        this.v = v;
+        this.v1= v1;
+    }
+    sayHi(){
+        console.log("Hi");
+    }
+    sum(n,n1){
+        return n+n1;
+    }
+    print(){
+        return this.v + this.v1;
+    }
+}
