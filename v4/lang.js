@@ -271,8 +271,8 @@ const Zha = function () {
 			var iterable = _Zha$.isList(list) ? list.value : list;
 			var results = [];
 			var state = evalForm(form[3], env);
-			for (var i = 0; i < iterable.length; i++) {
-				state = evalFnApplication([block, iterable[i], state], env);
+			for (var i = 0; i < mori.count(iterable); i++) {
+				state = evalFnApplication([block, mori.nth(iterable,i), state], env);
 				results.push(state);
 			}
 			return new _Zha$.ZhaList(results);

@@ -41,7 +41,18 @@ const RT = function () {
             //TODO: To determine if it needs to be curried.
             return new _Zha$.ZhaFn(getPiped(args), "_piped", args[0]._meta.args, false);
         }),
-        
+        //async tests
+        "timer" : new _Zha$.ZhaFn((f , env) => {
+        	const fn = () => {
+        		if(_Zha$.isFn(f[0])){
+        			f[0].invoke([], env);
+        		}else{
+        			f[0].apply(undefined, []);
+        		}
+        		return new _Zha$.ZhaString("Timer complete");
+        	} 
+        	setTimeout(fn, f[1].value);
+        }),
         //Js Interop
         /**
          * All unsafe ops. Deal with it
@@ -67,7 +78,7 @@ const RT = function () {
         "js/prop" : (obj, prop) => obj[prop],
         "js/prop!" : (obj, prop, val) => {obj[prop] = val; return obj},
         "js/eval" : (str) => (eval(str)) , 
-
+        "log" : (obj) => console.log(obj),
     }
 }();
 //ENV
