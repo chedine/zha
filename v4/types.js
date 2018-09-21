@@ -39,6 +39,18 @@ var _Zha$ =function types(){
 			return this.value;
 		}
 	}
+	class ZhaKeyword {
+		constructor(val){
+			this.value = val;
+			this._meta = {type : 0}
+		}
+		toString(){
+			return this.value;
+		}
+		equals(zhaVal){
+			return this._meta.type === zhaVal._meta.type && this.value === zhaVal.value;
+		}
+	}
 	class ZhaFn extends ZhaVal{
 		constructor(fn,name, args, curried= false){
 			super(fn);
@@ -97,6 +109,15 @@ var _Zha$ =function types(){
 		reverse(){
 			return this.make(mori.reverse(this.value));
 		}
+		first(){
+			return mori.first(this.value);
+		}
+		second(){
+			return mori.nth(this.value,1);
+		}
+		third(){
+			return mori.nth(this.value,2);
+		}
 		toString(){
 			return mori.toJs(this.value);
 		}
@@ -134,6 +155,7 @@ var _Zha$ =function types(){
 		isSymbol : (v) => v instanceof ZhaSymbol,
 		isList : (v) => v instanceof ZhaList,
 		isFn : (v) => v instanceof ZhaFn,
+		isKeyword : (v) => v instanceof ZhaKeyword,
 		ZhaBoolean: ZhaBoolean,
 		ZhaNumber: ZhaNumber,
 		ZhaString: ZhaString,
@@ -141,7 +163,8 @@ var _Zha$ =function types(){
 		ZhaVec: ZhaVec,
 		ZhaRange: ZhaRange,
 		ZhaSymbol:ZhaSymbol,
-		ZhaFn:ZhaFn
+		ZhaFn:ZhaFn,
+		ZhaKeyword:ZhaKeyword
 	}
 }();
 
@@ -155,6 +178,9 @@ function _typeIfy (literal) {
 	} else if (literal.startsWith('"') && literal.endsWith('"')) {
 		//Remove quotes
 		return new _Zha$.ZhaString(literal.substring(1, literal.length - 1), 2);
+	}
+	else if(literal.startsWith(':')){
+		return new _Zha$.ZhaKeyword(literal);
 	} else {
 		return new _Zha$.ZhaSymbol(literal);
 	}
