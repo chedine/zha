@@ -57,8 +57,10 @@
       runTest("(add1 3) 5"); //Curried function
 	  runTest("inc = add1 1");
       runTest('logger = # (log "done!!") ');
-	//  runTest('timer logger 5000');
-	  runTest('map transform list = loop list t1 empty where t1 state item = conj state (transform item), empty = () ');
+    //  runTest('timer logger 5000');
+    //call list is a hack to get back an empty list
+    runTest("e = call list");
+	  runTest('map transform list = last (loop list t1 empty) where t1 item state = conj state (transform item), empty = e ');
 																	
       function failures(){
            runTest("(add 1 3)"); // returns a list of symbols instead of evaluating it.

@@ -12,12 +12,12 @@ const RT = function () {
         "toUpper": (str) => new _Zha$.ZhaString(str.value.toUpperCase()),
         "toLower": (str) => new _Zha$.ZhaString(str.value.toLowerCase()),
         "substr": (str, from) => new _Zha$.ZhaString(str.value.substr(from.value)),
-        "list": function (...rest) {
-            return new _Zha$.ZhaList(rest);
-        },
-        "vec": function (...rest) {
-            return new _Zha$.ZhaVec(rest);
-        },
+        "list": new _Zha$.ZhaFn(  (args, env) => {
+            return new _Zha$.ZhaList(args);
+        }),
+        "vec": new _Zha$.ZhaFn(  (args, env) => {
+            return new _Zha$.ZhaVec(args);
+        }),
         "conj": (seq, el) => seq.conj(el),
         "get": (seq, index) => seq.get(index),
         "nth": (seq, n) => seq.nth(n),

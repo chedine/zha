@@ -41,13 +41,17 @@ const Zha = function () {
 					addToken(token);
 					token = '';
 				}
-				else if (char === '(') {
+				else if (char === '(' || char === '[') {
 					var innerCollector = [];
+					if(char === '['){
+						innerCollector.push("vec");
+					}
 					var end = read1(program, innerCollector, i + 1);
 					collector.push(innerCollector);
 					i = end;
-				} else if (char === ')') {
+				} else if (char === ')' || char === ']') {
 					addToken(token);
+					
 					return i;// + 1;
 				}
 				else if (char === ',') {
@@ -101,7 +105,7 @@ const Zha = function () {
 			}
 		}
 
-		return ast;
+		return new _Zha$.ZhaAST(ast[0],ast[1],ast[3],ast[2]);
 	}
 
 	function parseWhere(whereExpr) {
@@ -174,13 +178,13 @@ const Zha = function () {
 	//List of 4 elements.
 	function evalAST(ast, env) {
 
-		var bindings = ast[2];
-		var name = ast[0];
-		var params = ast[1];
-		var isFn = name !== undefined && (params !== undefined && params.length > 0)
+		var bindings = ast.bindings;
+		var name = ast.name;
+		var params = ast.params;
+		var isFn = ast.isFn;
 		if (!isFn) {
 			var lexScope = fixScope(bindings, env);
-			var result = evalForm(ast[3], lexScope);
+			var result = evalForm(ast.body, lexScope);
 			if (name !== undefined) {
 				//x = expr type
 				//Eval expr and assign it to X
@@ -195,7 +199,7 @@ const Zha = function () {
 		}
 		else {
 			//A function declaration form
-			const fnDefn = createFn(undefined, params, ast[3], ast[2]);
+			const fnDefn = createFn(undefined, params, ast.body, bindings);
 			env.define(name, fnDefn);
 			return fnDefn;
 		}
@@ -220,9 +224,9 @@ const Zha = function () {
 		if (!Array.isArray(form)) {
 			return evalAtom(form, env);
 		}
-		if (form.length === 1) {
+		/**if (form.length === 1) {
 			return evalAtom(form[0], env);
-		}
+		}**/
 		else if (isSplDirective(form[0].value)) {
 			return evalSplDirective(form, env);
 		}
@@ -334,6 +338,7 @@ const Zha = function () {
 	}
 	return {
 		read: read,
-		eval: eval
+		eval: eval,
+		parse:parse
 	}
 }();

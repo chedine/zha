@@ -149,6 +149,15 @@ var _Zha$ =function types(){
 			return new ZhaRange(seq);
 		}
 	}
+	class ZhaAST {
+		constructor(name, params, body, where){
+			this.name = name;
+			this.params = params;
+			this.body = body.length === 1 && !Array.isArray(body[0]) ? body[0]: body;
+			this.bindings = where;
+			this.isFn= name !== undefined && (params !== undefined && params.length > 0);
+		}
+	}
 	return {
 		isLiteral : (v) => v instanceof ZhaLiteral,
 		isSeq : (v) => v instanceof ZhaSeq,
@@ -164,7 +173,8 @@ var _Zha$ =function types(){
 		ZhaRange: ZhaRange,
 		ZhaSymbol:ZhaSymbol,
 		ZhaFn:ZhaFn,
-		ZhaKeyword:ZhaKeyword
+		ZhaKeyword:ZhaKeyword,
+		ZhaAST: ZhaAST
 	}
 }();
 
@@ -190,3 +200,4 @@ const curryz = f => {
         n === 0 ? f(...xs) : x => aux(n - 1, [...xs, x])
     return aux(f.length, [])
 }
+const isZhaAst = (o) => o instanceof ZhaAST;
