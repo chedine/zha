@@ -23,6 +23,12 @@ var _Zha$ =function types(){
 			super(val);
 			this._meta = {type: 2};
 		}
+		count(){
+			return new ZhaNumber(this.value.length);
+		}
+		toString(){
+			return `"${this.value}"`;
+		}
 	}
 	class ZhaBoolean extends ZhaLiteral{
 		constructor(val){
@@ -82,99 +88,122 @@ var _Zha$ =function types(){
 	}
 	class ZhaSeq extends ZhaVal{
 		constructor(val){
-			super(val);
+			super([...val]);
 		}
 		conj(el){
-			return this.make(mori.conj(this.value , el));
+			return this.make([...this.value , el]);
 		}
 		assoc(i, el){
-			return this.make(mori.assoc(this.value, i , el));
+			var _new = [...this.value];
+			_new[i] = el;
+			return this.make(_new);
 		}
 		get(i, defaultValue){
-			//i is a ZhaVal
-			return mori.get(this.value, i.value, defaultValue);
+			//TODO: Support default value
+			return this.nth(i);
 		}
 		nth(i){
-			return mori.nth(this.value,i.value);
+			return this.value[i];
 		}
 		last(){
-			return mori.last(this.value)
+			return this.value[this.value.length - 1];
 		}
 		trash(){
-			return this.make(mori.empty(this.value));
+			return this.make([]);
 		}
 		count(){
-			return new _Zha$.ZhaNumber(mori.count(this.value));
+			return new _Zha$.ZhaNumber(this.value.length);
 		}
 		reverse(){
-			return this.make(mori.reverse(this.value));
+			return this.make([...this.value].reverse());
 		}
 		first(){
-			return mori.first(this.value);
+			return this.value[0];
 		}
 		second(){
-			return mori.nth(this.value,1);
+			return this.value[1];
 		}
 		third(){
-			return mori.nth(this.value,2);
+			return this.value[2];
 		}
 		toString(){
 			return mori.toJs(this.value);
 		}
 	}
-	class ZhaList extends ZhaSeq{
-		constructor(val){
-			super(mori.isList(val)? val: mori.list.apply(undefined, val));
-		}
-		make(seq){
-			return new ZhaList(seq);
-		}
-	}
 	
 	class ZhaVec extends ZhaSeq{
 		constructor(val){
-			super(mori.vector(val)? val: mori.vector.apply(undefined, val));
+			super(val);
 		}
 		make(seq){
 			return new ZhaVec(seq);
 		}
 	}
-	
-	class ZhaRange extends ZhaSeq{
-		constructor(start, end, step){
-			super();
-			this.value = mori.range(start,end,step);
+	class ZhaMap extends ZhaVal{
+		constructor(val){
+			var _map = {};
+			for(var i=0;i<val.length; i+=2){
+				_map[val[i].value] = val[i+1];
+			}
+			super(_map);
 		}
-		make(seq){
-			return new ZhaRange(seq);
+		get(key){
+			return this.value[key.value];
 		}
 	}
 	class ZhaAST {
 		constructor(name, params, body, where){
 			this.name = name;
 			this.params = params;
-			this.body = body.length === 1 && !Array.isArray(body[0]) ? body[0]: body;
+			if(body.length > 1){
+				this.body = body;
+			}
+			else{
+				//form has just one element. It could be an atom(literal) like 2 or "Hello". Or a seq like [1,2,3]
+				this.body = body[0];
+			}
+			//this.body = body.length === 1 && !Array.isArray(body[0]) ? body[0]: body;
+
 			this.bindings = where;
 			this.isFn= name !== undefined && (params !== undefined && params.length > 0);
+			this.compiled = undefined;
+		}
+		compile(){
+			if(this.isFn){
+				var args = '';
+				for(var i=0;i<this.params.length;i++){
+					args += this.params[i].value;
+					if(i < this.params.length-1){
+						args += ',';
+					}
+				}
+				var compiled = `function ${this.name} (${args}) {
+					return ${this.body[0]} (${args});
+				}`;
+				console.log(compiled);
+				eval(compiled);
+				this.compiled = compiled;
+			}
 		}
 	}
 	return {
 		isLiteral : (v) => v instanceof ZhaLiteral,
 		isSeq : (v) => v instanceof ZhaSeq,
 		isSymbol : (v) => v instanceof ZhaSymbol,
-		isList : (v) => v instanceof ZhaList,
+		isList : (v) => v instanceof ZhaVec,
 		isFn : (v) => v instanceof ZhaFn,
 		isKeyword : (v) => v instanceof ZhaKeyword,
 		ZhaBoolean: ZhaBoolean,
 		ZhaNumber: ZhaNumber,
 		ZhaString: ZhaString,
-		ZhaList: ZhaList,
+		//ZhaList: ZhaList,
 		ZhaVec: ZhaVec,
-		ZhaRange: ZhaRange,
+	//	ZhaRange: ZhaRange,
 		ZhaSymbol:ZhaSymbol,
 		ZhaFn:ZhaFn,
 		ZhaKeyword:ZhaKeyword,
-		ZhaAST: ZhaAST
+		ZhaAST: ZhaAST,
+		ZhaMap: ZhaMap
 	}
 }();
 

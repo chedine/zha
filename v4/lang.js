@@ -44,14 +44,17 @@ const Zha = function () {
 				else if (char === '(' || char === '[') {
 					var innerCollector = [];
 					if(char === '['){
-						innerCollector.push("vec");
+					//	addToken('quote');
+						innerCollector.push(_typeIfy("vec"));
 					}
 					var end = read1(program, innerCollector, i + 1);
 					collector.push(innerCollector);
 					i = end;
 				} else if (char === ')' || char === ']') {
 					addToken(token);
-					
+					if(char === ']'){
+					//	addToken(")");
+					}
 					return i;// + 1;
 				}
 				else if (char === ',') {
@@ -234,7 +237,7 @@ const Zha = function () {
 	}
 
 	function isSplDirective(token) {
-		return token === "if" || token === "loop" || token === '#';
+		return token === "if" || token === "loop" || token === '#' || token === 'quote';
 	}
 	function createFn(name, fnArgs, fnBody, fnBindings) {
 		const fnDefn = new _Zha$.ZhaFn((args, callerEnv) => {
@@ -245,7 +248,7 @@ const Zha = function () {
 				if (fnArgs[i].value.startsWith("...")) {
 					//Varargs..
 					const actualSym = new _Zha$.ZhaSymbol(fnArgs[i].value.substr(3));
-					fnEnv.define(actualSym, new _Zha$.ZhaList(args.slice(i)));
+					fnEnv.define(actualSym, new _Zha$.ZhaVec(args.slice(i)));
 					break;
 				} else {
 					fnEnv.define(fnArgs[i], args[i]);
@@ -272,14 +275,14 @@ const Zha = function () {
 			var block = form[2]; // evalForm(form[2] , env);
 			//To support both native Array and ZhaList
 			//TODO: Remove when we only support ZhaList
-			var iterable = _Zha$.isList(list) ? list.value : list;
+			var iterable = list; //_Zha$.isList(list) ? list.value : list;
 			var results = [];
 			var state = evalForm(form[3], env);
-			for (var i = 0; i < mori.count(iterable); i++) {
-				state = evalFnApplication([block, mori.nth(iterable,i), state], env);
+			for (var i = 0; i < iterable.count().value; i++) {
+				state = evalFnApplication([block, iterable.nth(i), state], env);
 				results.push(state);
 			}
-			return new _Zha$.ZhaList(results);
+			return new _Zha$.ZhaVec(results);
 		}
 		else if (directive.value === '#') {
 			//Anon function
@@ -288,6 +291,10 @@ const Zha = function () {
 
 			const fnDefn = createFn(undefined, args, body, []);
 			return fnDefn;
+		}
+		else if(directive.value === 'quote'){
+			const listLiteral = form[1];
+			return evalForm(listLiteral, env);
 		}
 	}
 	function evalFnApplication(form, env) {

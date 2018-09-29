@@ -13,16 +13,25 @@ const RT = function () {
         "toLower": (str) => new _Zha$.ZhaString(str.value.toLowerCase()),
         "substr": (str, from) => new _Zha$.ZhaString(str.value.substr(from.value)),
         "list": new _Zha$.ZhaFn(  (args, env) => {
-            return new _Zha$.ZhaList(args);
+            return new _Zha$.ZhaVec(args);
+        }),
+        "range": new _Zha$.ZhaFn(  (args, env) => {
+            var start = args[0].value;
+            var length = args[1].value;
+           // var step = args[2].value;
+            return new _Zha$.ZhaVec(Array.from({length: length}, (x,i) => new _Zha$.ZhaNumber(i+start)));
         }),
         "vec": new _Zha$.ZhaFn(  (args, env) => {
             return new _Zha$.ZhaVec(args);
         }),
+        "hmap": new _Zha$.ZhaFn(  (args, env) => {
+            return new _Zha$.ZhaMap(args);
+        }),
         "conj": (seq, el) => seq.conj(el),
         "get": (seq, index) => seq.get(index),
         "nth": (seq, n) => seq.nth(n),
-        "count": new _Zha$.ZhaFn((seq) => seq[0].count()),
-        "last": new _Zha$.ZhaFn((seq) => seq[0].last()),
+        "count": new _Zha$.ZhaFn((arg) => arg[0].count()),
+        "last": new _Zha$.ZhaFn((arg) => arg[0].last()),
         "call": new _Zha$.ZhaFn((args, env) => args[0].invoke(args.slice(1), env)),
         "curry": new _Zha$.ZhaFn((args, env) => {
             const srcFunc = args[0];
@@ -49,7 +58,7 @@ const RT = function () {
         		}else{
         			f[0].apply(undefined, []);
         		}
-        		return new _Zha$.ZhaString("Timer complete");
+        		return new _Zha$.ZhaKeyword(":done");
         	} 
         	setTimeout(fn, f[1].value);
         }),
@@ -58,14 +67,14 @@ const RT = function () {
          * All unsafe ops. Deal with it
          * TODO: Clean 'em up
          */
-        "toJs" : (zha) => _Zha$.isLiteral(zha) ? zha.value : mori.toJs(zha.value),
+        "toJs" : (zha) => zha.toNative(),
         "js/new": (type, ...args) => {
             let str = `new ${type.value}`;
             if(args){
                 str += " (";
                 var stopper = args.length - 1;
                 for(var i=0;i<args.length;i++){
-                    str += args[i].value ;
+                    str += args[i].toString() ;
                     if(i < stopper){
                         str += " , "
                     }
@@ -74,8 +83,8 @@ const RT = function () {
             } 
             return (eval(str));
         },
-        "js/call" : (obj, methodName , ...args) => obj[methodName].apply(undefined, args),
-        "js/prop" : (obj, prop) => obj[prop],
+        "js/call" : (obj, methodName , ...args) => obj[methodName.value].apply(obj, args),
+        "js/prop" : (obj, prop) => obj[prop.value],
         "js/prop!" : (obj, prop, val) => {obj[prop] = val; return obj},
         "js/eval" : (str) => (eval(str)) , 
         "log" : (obj) => console.log(obj),
@@ -139,4 +148,4 @@ class Test{
     print(){
         return this.v + this.v1;
     }
-}
+}   
