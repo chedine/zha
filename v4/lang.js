@@ -305,10 +305,14 @@ const Zha = function () {
 		}
 		var operands = form.slice(1);
 		var args = [];
-		for (var i = 0; i < operands.length; i++) {
+		var i = 0;
+		for (; i < operands.length; i++) {
 			//TODO: Decide if pushing the raw value or ZHA type make sense
 			//Right now, we push Zha type and let the function retrieve value from it.
 			var val = operands[i]; //.value;
+			/**if(_Zha$.isSymbol(val) && val.value === '->'){
+				break;
+			}**/
 			if (_Zha$.isSymbol(val)) {
 				val = evalAtom(val, env);
 			} else if (_Zha$.isList(val)) {
@@ -322,6 +326,22 @@ const Zha = function () {
 			}
 			args.push(val);
 		}
+		//To handle async 
+		/**var handlers = [];
+		for (i = i+1; i < operands.length; i++) {
+			var op = operands[i];
+			if(_Zha$.isSymbol(op) && op.value === '->'){
+				break;
+			}
+			if(Array.isArray(op)){
+				op = evalForm(op,env);
+			}
+			handlers.push(op);
+		}
+		if(handlers.length >0){
+			args.push(handlers);
+		}**/
+		//Function application starts.
 		if (_Zha$.isFn(operation)) {
 			return operation.invoke(args, env);
 		}

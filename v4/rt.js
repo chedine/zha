@@ -9,29 +9,32 @@ const RT = function () {
         "<=": (a, b) => new _Zha$.ZhaBoolean(a.value <= b.value),
         ">": (a, b) => new _Zha$.ZhaBoolean(a.value > b.value),
         "eq": (a, b) => new _Zha$.ZhaBoolean(a.value === b.value),
-        "toUpper": (str) => new _Zha$.ZhaString(str.value.toUpperCase()),
-        "toLower": (str) => new _Zha$.ZhaString(str.value.toLowerCase()),
-        "substr": (str, from) => new _Zha$.ZhaString(str.value.substr(from.value)),
-        "list": new _Zha$.ZhaFn(  (args, env) => {
+    //    "toUpper": (str) => new _Zha$.ZhaString(str.value.toUpperCase()),
+    //    "toLower": (str) => new _Zha$.ZhaString(str.value.toLowerCase()),
+    //    "substr": (str, from) => new _Zha$.ZhaString(str.value.substr(from.value)),
+        "list": new _Zha$.ZhaFn((args, env) => {
             return new _Zha$.ZhaVec(args);
         }),
-        "range": new _Zha$.ZhaFn(  (args, env) => {
+        "range": new _Zha$.ZhaFn((args, env) => {
             var start = args[0].value;
             var length = args[1].value;
-           // var step = args[2].value;
-            return new _Zha$.ZhaVec(Array.from({length: length}, (x,i) => new _Zha$.ZhaNumber(i+start)));
+            // var step = args[2].value;
+            return new _Zha$.ZhaVec(Array.from({ length: length }, (x, i) => new _Zha$.ZhaNumber(i + start)));
         }),
-        "vec": new _Zha$.ZhaFn(  (args, env) => {
+        "vec": new _Zha$.ZhaFn((args, env) => {
             return new _Zha$.ZhaVec(args);
         }),
-        "hmap": new _Zha$.ZhaFn(  (args, env) => {
+        "hmap": new _Zha$.ZhaFn((args, env) => {
             return new _Zha$.ZhaMap(args);
         }),
-        "conj": (seq, el) => seq.conj(el),
-        "get": (seq, index) => seq.get(index),
-        "nth": (seq, n) => seq.nth(n),
-        "count": new _Zha$.ZhaFn((arg) => arg[0].count()),
-        "last": new _Zha$.ZhaFn((arg) => arg[0].last()),
+        "->Str" :new _Zha$.ZhaFn((args, env) => {
+            return new _Zha$.ZhaString(args[0]);
+        }), 
+      //  "conj": (seq, el) => seq.conj(el),
+      //  "get": (seq, index) => seq.get(index),
+       // "nth": (seq, n) => seq.nth(n),
+        //"count": new _Zha$.ZhaFn((arg) => arg[0].count()),
+        //"last": new _Zha$.ZhaFn((arg) => arg[0].last()),
         "call": new _Zha$.ZhaFn((args, env) => args[0].invoke(args.slice(1), env)),
         "curry": new _Zha$.ZhaFn((args, env) => {
             const srcFunc = args[0];
@@ -51,43 +54,72 @@ const RT = function () {
             return new _Zha$.ZhaFn(getPiped(args), "_piped", args[0]._meta.args, false);
         }),
         //async tests
-        "timer" : new _Zha$.ZhaFn((f , env) => {
-        	const fn = () => {
-        		if(_Zha$.isFn(f[0])){
-        			f[0].invoke([], env);
-        		}else{
-        			f[0].apply(undefined, []);
-        		}
-        		return new _Zha$.ZhaKeyword(":done");
-        	} 
-        	setTimeout(fn, f[1].value);
+        "timer": new _Zha$.ZhaFn((f, env) => {
+            const fn = () => {
+                if (_Zha$.isFn(f[0])) {
+                    f[0].invoke([], env);
+                } else {
+                    f[0].apply(undefined, []);
+                }
+                return new _Zha$.ZhaKeyword(":done");
+            }
+            setTimeout(fn, f[1].value);
         }),
         //Js Interop
         /**
          * All unsafe ops. Deal with it
          * TODO: Clean 'em up
          */
-        "toJs" : (zha) => zha.toNative(),
+        "toJs": (zha) => zha.toNative(),
         "js/new": (type, ...args) => {
             let str = `new ${type.value}`;
-            if(args){
+            if (args) {
                 str += " (";
                 var stopper = args.length - 1;
-                for(var i=0;i<args.length;i++){
-                    str += args[i].toString() ;
-                    if(i < stopper){
+                for (var i = 0; i < args.length; i++) {
+                    str += args[i].toString();
+                    if (i < stopper) {
                         str += " , "
                     }
                 }
                 str += " );";
-            } 
+            }
             return (eval(str));
         },
-        "js/call" : (obj, methodName , ...args) => obj[methodName.value].apply(obj, args),
-        "js/prop" : (obj, prop) => obj[prop.value],
-        "js/prop!" : (obj, prop, val) => {obj[prop] = val; return obj},
-        "js/eval" : (str) => (eval(str)) , 
-        "log" : (obj) => console.log(obj),
+        "js/call": (obj, methodName, ...args) => obj[methodName.value].apply(obj, args),
+        "js/prop": (obj, prop) => obj[prop.value],
+        "js/prop!": (obj, prop, val) => { obj[prop] = val; return obj },
+        "js/eval": (str) => (eval(str)),
+        "log": new _Zha$.ZhaFn((args, env) => console.log(args[0])),
+        "fetch": new _Zha$.ZhaFn((args, env) => {
+            const url = args[0].value;
+            const handler = args[1];
+            return fetch(url, { method: 'get' }).then((d) => handler.invoke([d], env));
+        }),
+        "fetch1": new _Zha$.ZhaAsyncFn((args, env) => {
+            const url = args[0].value;
+            //const handlerArray = args[1];
+            let promise = fetch(url, { method: 'get' });
+            /**for (var i = 0; i < handlerArray.length; i++) {
+                var operation = handlerArray[i];
+                promise.then((d) => {
+                    if (_Zha$.isFn(operation)) {
+                        return operation.invoke([d], env);
+                    }
+                    var resolvedOP = env.lookup(operation);
+                    if (_Zha$.isFn(resolvedOP)) {
+                        return resolvedOP.invoke([d], env);
+                    }
+                });
+            }**/
+            return promise;
+        }),
+        "fetch/text" : new _Zha$.ZhaAsyncFn((args,env) => {
+            const r =  args[0].text();
+            console.log(r);
+            return r;
+        }),
+       // "echo": new _Zha$.ZhaFn((args, env) => args[0])
     }
 }();
 //ENV
@@ -134,18 +166,18 @@ const ENVIRONMENT = function (runtime, root) {
 };
 const ENV = new ENVIRONMENT(RT, undefined);
 
-class Test{
-    constructor(v, v1){
+class Test {
+    constructor(v, v1) {
         this.v = v;
-        this.v1= v1;
+        this.v1 = v1;
     }
-    sayHi(){
+    sayHi() {
         console.log("Hi");
     }
-    sum(n,n1){
-        return n+n1;
+    sum(n, n1) {
+        return n + n1;
     }
-    print(){
+    print() {
         return this.v + this.v1;
     }
 }   

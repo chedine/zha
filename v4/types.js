@@ -1,179 +1,220 @@
-var _Zha$ =function types(){
+var _Zha$ = function types() {
 	var _self = this;
 	const _internals = Symbol('_internals');
-	
-	class ZhaVal{
-		constructor(val){
+
+	class ZhaVal {
+		constructor(val) {
 			this.value = val;
 		}
-		toString(){
+		toString() {
 			return this.value;
 		}
 	}
-	class ZhaLiteral extends ZhaVal{
+	class ZhaLiteral extends ZhaVal {
 	}
-	class ZhaNumber extends ZhaLiteral{
-		constructor(val){
+	class ZhaNumber extends ZhaLiteral {
+		constructor(val) {
 			super(val);
-			this._meta = {type: 1};
+			this._meta = { type: 1 };
 		}
 	}
-	class ZhaString extends ZhaLiteral{
-		constructor(val){
+	class ZhaString extends ZhaLiteral {
+		constructor(val) {
 			super(val);
-			this._meta = {type: 2};
+			this._meta = { type: 2 };
 		}
-		count(){
+		count() {
 			return new ZhaNumber(this.value.length);
 		}
-		toString(){
+
+		toString() {
 			return `"${this.value}"`;
 		}
 	}
-	class ZhaBoolean extends ZhaLiteral{
-		constructor(val){
+	class ZhaBoolean extends ZhaLiteral {
+		constructor(val) {
 			super(val);
-			this._meta = {type: 3};
+			this._meta = { type: 3 };
 		}
 	}
-	class ZhaSymbol extends ZhaVal{
-		constructor(val){
+	class ZhaSymbol extends ZhaVal {
+		constructor(val) {
 			super(val);
-			this._meta = {type: 4};
+			this._meta = { type: 4 };
 		}
-		toString(){
+		toString() {
 			return this.value;
 		}
 	}
 	class ZhaKeyword {
-		constructor(val){
+		constructor(val) {
 			this.value = val;
-			this._meta = {type : 0}
+			this._meta = { type: 0 }
 		}
-		toString(){
+		toString() {
 			return this.value;
 		}
-		equals(zhaVal){
+		equals(zhaVal) {
 			return this._meta.type === zhaVal._meta.type && this.value === zhaVal.value;
 		}
 	}
-	class ZhaFn extends ZhaVal{
-		constructor(fn,name, args, curried= false){
+	class ZhaFn extends ZhaVal {
+		constructor(fn, name, args, curried = false) {
 			super(fn);
 			this._prefills = [];
-			this._meta = {type:5, name: name, args: args,curried:curried};
+			this._meta = { type: 5, name: name, args: args, curried: curried };
 		}
-		invoke( arrayOfArgs, env){
-			if(!this._meta.curried){
-				var returnVal = this.value.apply(undefined,[arrayOfArgs,env]);
+		invoke(arrayOfArgs, env) {
+			if (!this._meta.curried) {
+				var returnVal = this.value.apply(undefined, [arrayOfArgs, env]);
 				return returnVal;
 			}
-			else{
-				var isFulfilled  = this._prefills.length + arrayOfArgs.length === this._meta.args.length;
-				if(isFulfilled){
+			else {
+				var isFulfilled = this._prefills.length + arrayOfArgs.length === this._meta.args.length;
+				if (isFulfilled) {
 					var fullArgsList = this._prefills.concat(arrayOfArgs);
-					var returnVal = this.value.apply(undefined,[fullArgsList,env]);
+					var returnVal = this.value.apply(undefined, [fullArgsList, env]);
 					return returnVal;
 				}
-				else{
+				else {
 					const curried = new ZhaFn(this.value, this._meta.name, this._meta.args, true);
 					curried._prefills.concat(this._prefills);
-					for(var i=0;i<arrayOfArgs.length;i++){
-						curried._prefills.push(arrayOfArgs[i]);	
+					for (var i = 0; i < arrayOfArgs.length; i++) {
+						curried._prefills.push(arrayOfArgs[i]);
 					}
 					return curried;
 				}
 			}
 		}
 	}
-	class ZhaSeq extends ZhaVal{
-		constructor(val){
+	class ZhaAsyncFn extends ZhaFn {
+		invoke(arrayOfArgs, env) {
+			var results = super.invoke(arrayOfArgs, env);
+			if (results instanceof Promise) {
+				var handlerArray = arrayOfArgs[arrayOfArgs.length - 1]; //last
+				/**if (Array.isArray(handlerArray)) {
+					for (var i = 0; i < handlerArray.length; i++) {
+						var operation = handlerArray[i];
+						var newResults = results.then((d) => {
+							if (_Zha$.isFn(operation)) {
+								return operation.invoke([d], env);
+							}
+							var resolvedOP = env.lookup(operation);
+							if (_Zha$.isFn(resolvedOP)) {
+								//console.log("Thenable fn " + d);
+								return resolvedOP.invoke([d], env);
+							}
+						});
+						if(i < (handlerArray.length-1)){
+
+						}
+					}
+				}**/
+				if(handlerArray !== undefined){
+					var operation = handlerArray;
+						results = results.then((d) => {
+							if (_Zha$.isFn(operation)) {
+								return operation.invoke([d], env);
+							}
+							var resolvedOP = env.lookup(operation);
+							if (_Zha$.isFn(resolvedOP)) {
+								console.log("Thenable fn " + d);
+								return resolvedOP.invoke([d], env);
+							}
+						});
+				}
+			}
+			return results;
+		}
+	}
+	class ZhaSeq extends ZhaVal {
+		constructor(val) {
 			super([...val]);
 		}
-		conj(el){
-			return this.make([...this.value , el]);
+		conj(el) {
+			return this.make([...this.value, el]);
 		}
-		assoc(i, el){
+		assoc(i, el) {
 			var _new = [...this.value];
 			_new[i] = el;
 			return this.make(_new);
 		}
-		get(i, defaultValue){
+		get(i, defaultValue) {
 			//TODO: Support default value
 			return this.nth(i);
 		}
-		nth(i){
+		nth(i) {
 			return this.value[i];
 		}
-		last(){
+		last() {
 			return this.value[this.value.length - 1];
 		}
-		trash(){
+		trash() {
 			return this.make([]);
 		}
-		count(){
+		count() {
 			return new _Zha$.ZhaNumber(this.value.length);
 		}
-		reverse(){
+		reverse() {
 			return this.make([...this.value].reverse());
 		}
-		first(){
+		first() {
 			return this.value[0];
 		}
-		second(){
+		second() {
 			return this.value[1];
 		}
-		third(){
+		third() {
 			return this.value[2];
 		}
-		toString(){
+		toString() {
 			return mori.toJs(this.value);
 		}
 	}
-	
-	class ZhaVec extends ZhaSeq{
-		constructor(val){
+
+	class ZhaVec extends ZhaSeq {
+		constructor(val) {
 			super(val);
 		}
-		make(seq){
+		make(seq) {
 			return new ZhaVec(seq);
 		}
 	}
-	class ZhaMap extends ZhaVal{
-		constructor(val){
+	class ZhaMap extends ZhaVal {
+		constructor(val) {
 			var _map = {};
-			for(var i=0;i<val.length; i+=2){
-				_map[val[i].value] = val[i+1];
+			for (var i = 0; i < val.length; i += 2) {
+				_map[val[i].value] = val[i + 1];
 			}
 			super(_map);
 		}
-		get(key){
+		get(key) {
 			return this.value[key.value];
 		}
 	}
 	class ZhaAST {
-		constructor(name, params, body, where){
+		constructor(name, params, body, where) {
 			this.name = name;
 			this.params = params;
-			if(body.length > 1){
+			if (body.length > 1) {
 				this.body = body;
 			}
-			else{
+			else {
 				//form has just one element. It could be an atom(literal) like 2 or "Hello". Or a seq like [1,2,3]
 				this.body = body[0];
 			}
 			//this.body = body.length === 1 && !Array.isArray(body[0]) ? body[0]: body;
 
 			this.bindings = where;
-			this.isFn= name !== undefined && (params !== undefined && params.length > 0);
+			this.isFn = name !== undefined && (params !== undefined && params.length > 0);
 			this.compiled = undefined;
 		}
-		compile(){
-			if(this.isFn){
+		compile() {
+			if (this.isFn) {
 				var args = '';
-				for(var i=0;i<this.params.length;i++){
+				for (var i = 0; i < this.params.length; i++) {
 					args += this.params[i].value;
-					if(i < this.params.length-1){
+					if (i < this.params.length - 1) {
 						args += ',';
 					}
 				}
@@ -186,29 +227,38 @@ var _Zha$ =function types(){
 			}
 		}
 	}
+	class ZhaFuture {
+		constructor(val) {
+			this.value = val;
+		}
+		fork(successFn, errorFn) {
+			this.value.apply(undefined)
+		}
+	}
 	return {
-		isLiteral : (v) => v instanceof ZhaLiteral,
-		isSeq : (v) => v instanceof ZhaSeq,
-		isSymbol : (v) => v instanceof ZhaSymbol,
-		isList : (v) => v instanceof ZhaVec,
-		isFn : (v) => v instanceof ZhaFn,
-		isKeyword : (v) => v instanceof ZhaKeyword,
+		isLiteral: (v) => v instanceof ZhaLiteral,
+		isSeq: (v) => v instanceof ZhaSeq,
+		isSymbol: (v) => v instanceof ZhaSymbol,
+		isList: (v) => v instanceof ZhaVec,
+		isFn: (v) => v instanceof ZhaFn,
+		isKeyword: (v) => v instanceof ZhaKeyword,
 		ZhaBoolean: ZhaBoolean,
 		ZhaNumber: ZhaNumber,
 		ZhaString: ZhaString,
 		//ZhaList: ZhaList,
 		ZhaVec: ZhaVec,
-	//	ZhaRange: ZhaRange,
-		ZhaSymbol:ZhaSymbol,
-		ZhaFn:ZhaFn,
-		ZhaKeyword:ZhaKeyword,
+		//	ZhaRange: ZhaRange,
+		ZhaSymbol: ZhaSymbol,
+		ZhaFn: ZhaFn,
+		ZhaKeyword: ZhaKeyword,
 		ZhaAST: ZhaAST,
-		ZhaMap: ZhaMap
+		ZhaMap: ZhaMap,
+		ZhaAsyncFn: ZhaAsyncFn
 	}
 }();
 
-function _typeIfy (literal) {
-	if (literal === "true" ||  literal === true) {
+function _typeIfy(literal) {
+	if (literal === "true" || literal === true) {
 		return new _Zha$.ZhaBoolean(true);
 	} else if (literal === "false" || literal === false) {
 		return new _Zha$.ZhaBoolean(false);
@@ -217,16 +267,23 @@ function _typeIfy (literal) {
 	} else if (literal.startsWith('"') && literal.endsWith('"')) {
 		//Remove quotes
 		return new _Zha$.ZhaString(literal.substring(1, literal.length - 1), 2);
+		//return new String(literal.substring(1, literal.length - 1), 2);
 	}
-	else if(literal.startsWith(':')){
+	else if (literal.startsWith(':')) {
 		return new _Zha$.ZhaKeyword(literal);
 	} else {
 		return new _Zha$.ZhaSymbol(literal);
 	}
 }
 const curryz = f => {
-    const aux = (n, xs) =>
-        n === 0 ? f(...xs) : x => aux(n - 1, [...xs, x])
-    return aux(f.length, [])
+	const aux = (n, xs) =>
+		n === 0 ? f(...xs) : x => aux(n - 1, [...xs, x])
+	return aux(f.length, [])
 }
 const isZhaAst = (o) => o instanceof ZhaAST;
+
+/**
+ * Add all custom methods to the native prototypes as well.
+ * For ex: Add String.prototype.count to support the same op on the native string type.
+ * for smooth interop
+ */

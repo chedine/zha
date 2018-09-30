@@ -23,7 +23,7 @@
 			return mori.toJs(val.value);
 		}
 		else{
-			return val.value;
+			return val !== undefined ? val.value : "Nothing";
 		}
 	  }
 	  function printComposite(val){
