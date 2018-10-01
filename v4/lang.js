@@ -202,7 +202,7 @@ const Zha = function () {
 		}
 		else {
 			//A function declaration form
-			const fnDefn = createFn(undefined, params, ast.body, bindings);
+			const fnDefn = createFn(undefined, params, ast.body, bindings, env);
 			env.define(name, fnDefn);
 			return fnDefn;
 		}
@@ -239,7 +239,7 @@ const Zha = function () {
 	function isSplDirective(token) {
 		return token === "if" || token === "loop" || token === '#' || token === 'quote';
 	}
-	function createFn(name, fnArgs, fnBody, fnBindings) {
+	function createFn(name, fnArgs, fnBody, fnBindings, env) {
 		const fnDefn = new _Zha$.ZhaFn((args, callerEnv) => {
 			//Args is a array of two elements
 			//1 is the caller env, 2 is the actual args to this fn
@@ -257,7 +257,7 @@ const Zha = function () {
 			var lexScope = fixScope(fnBindings, fnEnv);
 			var result = evalForm(fnBody, lexScope);
 			return result;
-		}, name, fnArgs);
+		}, name, fnArgs, env);
 		//env.define(name, fnDefn);
 		return fnDefn;
 	}
@@ -289,7 +289,7 @@ const Zha = function () {
 			const args = form.length === 3 ? form[1] : [];
 			const body = form.length === 3 ? form[2] : form[1];
 
-			const fnDefn = createFn(undefined, args, body, []);
+			const fnDefn = createFn(undefined, args, body, [], env);
 			return fnDefn;
 		}
 		else if(directive.value === 'quote'){

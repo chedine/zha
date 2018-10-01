@@ -8,6 +8,9 @@ const RT = function () {
         "<": (a, b) => new _Zha$.ZhaBoolean(a.value < b.value),
         "<=": (a, b) => new _Zha$.ZhaBoolean(a.value <= b.value),
         ">": (a, b) => new _Zha$.ZhaBoolean(a.value > b.value),
+        "&&": (a, b) => new _Zha$.ZhaBoolean(a.value && b.value),
+        "||": (a, b) => new _Zha$.ZhaBoolean(a.value || b.value),
+        "!": (a) => new _Zha$.ZhaBoolean(!a.value),
         "eq": (a, b) => new _Zha$.ZhaBoolean(a.value === b.value),
     //    "toUpper": (str) => new _Zha$.ZhaString(str.value.toUpperCase()),
     //    "toLower": (str) => new _Zha$.ZhaString(str.value.toLowerCase()),
@@ -119,6 +122,12 @@ const RT = function () {
             console.log(r);
             return r;
         }),
+        "apply" : new _Zha$.ZhaFn((args, env) => {
+            const fn = args[0];
+            const argArray = _Zha$.isSeq(args[1]) ? args[1].value: args[1];
+            const args1 = Array.isArray(argArray) ? argArray : [argArray];
+            return fn.invoke([...args1, env]);
+        })
        // "echo": new _Zha$.ZhaFn((args, env) => args[0])
     }
 }();

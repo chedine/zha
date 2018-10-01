@@ -59,21 +59,22 @@ var _Zha$ = function types() {
 		}
 	}
 	class ZhaFn extends ZhaVal {
-		constructor(fn, name, args, curried = false) {
+		constructor(fn, name, args, env, curried = false) {
 			super(fn);
 			this._prefills = [];
+			this.env = env;
 			this._meta = { type: 5, name: name, args: args, curried: curried };
 		}
-		invoke(arrayOfArgs, env) {
+		invoke(arrayOfArgs) {
 			if (!this._meta.curried) {
-				var returnVal = this.value.apply(undefined, [arrayOfArgs, env]);
+				var returnVal = this.value.apply(undefined, [arrayOfArgs, this.env]);
 				return returnVal;
 			}
 			else {
 				var isFulfilled = this._prefills.length + arrayOfArgs.length === this._meta.args.length;
 				if (isFulfilled) {
 					var fullArgsList = this._prefills.concat(arrayOfArgs);
-					var returnVal = this.value.apply(undefined, [fullArgsList, env]);
+					var returnVal = this.value.apply(undefined, [fullArgsList, this.env]);
 					return returnVal;
 				}
 				else {
@@ -88,38 +89,20 @@ var _Zha$ = function types() {
 		}
 	}
 	class ZhaAsyncFn extends ZhaFn {
-		invoke(arrayOfArgs, env) {
-			var results = super.invoke(arrayOfArgs, env);
+		invoke(arrayOfArgs) {
+			var results = super.invoke(arrayOfArgs);
 			if (results instanceof Promise) {
 				var handlerArray = arrayOfArgs[arrayOfArgs.length - 1]; //last
-				/**if (Array.isArray(handlerArray)) {
-					for (var i = 0; i < handlerArray.length; i++) {
-						var operation = handlerArray[i];
-						var newResults = results.then((d) => {
-							if (_Zha$.isFn(operation)) {
-								return operation.invoke([d], env);
-							}
-							var resolvedOP = env.lookup(operation);
-							if (_Zha$.isFn(resolvedOP)) {
-								//console.log("Thenable fn " + d);
-								return resolvedOP.invoke([d], env);
-							}
-						});
-						if(i < (handlerArray.length-1)){
-
-						}
-					}
-				}**/
 				if(handlerArray !== undefined){
 					var operation = handlerArray;
 						results = results.then((d) => {
 							if (_Zha$.isFn(operation)) {
-								return operation.invoke([d], env);
+								return operation.invoke([d], this.env);
 							}
 							var resolvedOP = env.lookup(operation);
 							if (_Zha$.isFn(resolvedOP)) {
 								console.log("Thenable fn " + d);
-								return resolvedOP.invoke([d], env);
+								return resolvedOP.invoke([d], this.env);
 							}
 						});
 				}
@@ -133,6 +116,9 @@ var _Zha$ = function types() {
 		}
 		conj(el) {
 			return this.make([...this.value, el]);
+		}
+		concat(seq){
+			return this.make(this.value.concat(seq.value));
 		}
 		assoc(i, el) {
 			var _new = [...this.value];
@@ -166,6 +152,22 @@ var _Zha$ = function types() {
 		}
 		third() {
 			return this.value[2];
+		}
+		rest(){
+			return this.make(this.value.slice(1));
+		}
+		drop(n){
+			return this.make(this.value.slice(n.value));
+		}
+		take(n){
+			return this.takeRange(0,n);
+		}
+		takeLast(n){
+			const s = this.value.length-n;
+			return this.takeRange(s,this.value.length);
+		}
+		takeRange(start, n){
+			return this.make(this.value.slice(start,n));
 		}
 		toString() {
 			return mori.toJs(this.value);
