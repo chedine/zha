@@ -17,6 +17,27 @@ var _Zha$ = function types() {
 			super(val);
 			this._meta = { type: 1 };
 		}
+		add(n) {
+			return new ZhaNumber(this.value + n.value);
+		}
+		sub(n) {
+			return new ZhaNumber(this.value - n.value);
+		}
+		div(n) {
+			return new ZhaNumber(this.value / n.value);
+		}
+		mul(n) {
+			return new ZhaNumber(this.value * n.value);
+		}
+		mod(n) {
+			return new ZhaNumber(this.value % n.value);
+		}
+		pow(n) {
+			return new ZhaNumber(Math.pow(this.value + n.value));
+		}
+		type() {
+			return new ZhaKeyword(":Number");
+		}
 	}
 	class ZhaString extends ZhaLiteral {
 		constructor(val) {
@@ -26,15 +47,60 @@ var _Zha$ = function types() {
 		count() {
 			return new ZhaNumber(this.value.length);
 		}
-
+		asVec(arrayOfStr){
+			if(arrayOfStr === null || arrayOfStr === undefined){
+				return new ZhaNil();
+			}
+			const s1 = [];
+			for (var i = 0; i < arrayOfStr.length; i++) {
+				s1.push(new ZhaString(arrayOfStr[i]));
+			}
+			return new ZhaVec(s1);
+		}
+		split(delim) {
+			const s = this.value.split(delim.value);
+			return this.asVec(s);
+		}
+		match(regex) {
+			function r(inputstring) {
+				var regParts = inputstring.match(/^\/(.*?)\/([gim]*)$/);
+				if (regParts) {
+					// the parsed pattern had delimiters and modifiers. handle them.
+					return new RegExp(regParts[1], regParts[2]);
+				} else {
+					// we got pattern string without delimiters
+					return new RegExp(inputstring);
+				}
+			}
+			const s = this.value.match(r(regex.value));
+			return this.asVec(s);
+		}
+		add(str1){
+			return new ZhaString(this.value + str1.value);
+		}
 		toString() {
 			return `"${this.value}"`;
+		}
+		type() {
+			return new ZhaKeyword(":String");
 		}
 	}
 	class ZhaBoolean extends ZhaLiteral {
 		constructor(val) {
 			super(val);
 			this._meta = { type: 3 };
+		}
+		and(other) {
+			return new ZhaBoolean(this.value && other.value);
+		}
+		or(other) {
+			return new ZhaBoolean(this.value || other.value);
+		}
+		not(other) {
+			return new ZhaBoolean(!this.value);
+		}
+		type() {
+			return new ZhaKeyword(":Boolean");
 		}
 	}
 	class ZhaSymbol extends ZhaVal {
@@ -45,17 +111,23 @@ var _Zha$ = function types() {
 		toString() {
 			return this.value;
 		}
+		type() {
+			return new ZhaKeyword(":Symbol");
+		}
 	}
-	class ZhaKeyword {
+	class ZhaKeyword extends ZhaVal {
 		constructor(val) {
-			this.value = val;
+			super(val);
 			this._meta = { type: 0 }
 		}
 		toString() {
 			return this.value;
 		}
 		equals(zhaVal) {
-			return this._meta.type === zhaVal._meta.type && this.value === zhaVal.value;
+			return new ZhaBoolean(this._meta.type === zhaVal._meta.type && this.value === zhaVal.value);
+		}
+		type() {
+			return new ZhaKeyword(":Keyword");
 		}
 	}
 	class ZhaFn extends ZhaVal {
@@ -65,9 +137,10 @@ var _Zha$ = function types() {
 			this.env = env;
 			this._meta = { type: 5, name: name, args: args, curried: curried };
 		}
-		invoke(arrayOfArgs) {
+		invoke(arrayOfArgs, env) {
 			if (!this._meta.curried) {
 				var returnVal = this.value.apply(undefined, [arrayOfArgs, this.env]);
+				//console.log(this.name , arrayOfArgs, returnVal);
 				return returnVal;
 			}
 			else {
@@ -78,7 +151,8 @@ var _Zha$ = function types() {
 					return returnVal;
 				}
 				else {
-					const curried = new ZhaFn(this.value, this._meta.name, this._meta.args, true);
+					//TODO: should this curried version have method arg as env or the member var env.
+					const curried = new ZhaFn(this.value, this._meta.name, this._meta.args, env, true);
 					curried._prefills.concat(this._prefills);
 					for (var i = 0; i < arrayOfArgs.length; i++) {
 						curried._prefills.push(arrayOfArgs[i]);
@@ -87,27 +161,33 @@ var _Zha$ = function types() {
 				}
 			}
 		}
+		type() {
+			return new ZhaKeyword(":Fn");
+		}
 	}
 	class ZhaAsyncFn extends ZhaFn {
 		invoke(arrayOfArgs) {
 			var results = super.invoke(arrayOfArgs);
 			if (results instanceof Promise) {
 				var handlerArray = arrayOfArgs[arrayOfArgs.length - 1]; //last
-				if(handlerArray !== undefined){
+				if (handlerArray !== undefined) {
 					var operation = handlerArray;
-						results = results.then((d) => {
-							if (_Zha$.isFn(operation)) {
-								return operation.invoke([d], this.env);
-							}
-							var resolvedOP = env.lookup(operation);
-							if (_Zha$.isFn(resolvedOP)) {
-								console.log("Thenable fn " + d);
-								return resolvedOP.invoke([d], this.env);
-							}
-						});
+					results = results.then((d) => {
+						if (_Zha$.isFn(operation)) {
+							return operation.invoke([d], this.env);
+						}
+						var resolvedOP = env.lookup(operation);
+						if (_Zha$.isFn(resolvedOP)) {
+							console.log("Thenable fn " + d);
+							return resolvedOP.invoke([d], this.env);
+						}
+					});
 				}
 			}
 			return results;
+		}
+		type() {
+			return new ZhaKeyword(":AFn");
 		}
 	}
 	class ZhaSeq extends ZhaVal {
@@ -117,13 +197,16 @@ var _Zha$ = function types() {
 		conj(el) {
 			return this.make([...this.value, el]);
 		}
-		concat(seq){
+		concat(seq) {
 			return this.make(this.value.concat(seq.value));
 		}
 		assoc(i, el) {
 			var _new = [...this.value];
 			_new[i] = el;
 			return this.make(_new);
+		}
+		updatein(i,el){
+
 		}
 		get(i, defaultValue) {
 			//TODO: Support default value
@@ -153,21 +236,21 @@ var _Zha$ = function types() {
 		third() {
 			return this.value[2];
 		}
-		rest(){
+		rest() {
 			return this.make(this.value.slice(1));
 		}
-		drop(n){
+		drop(n) {
 			return this.make(this.value.slice(n.value));
 		}
-		take(n){
-			return this.takeRange(0,n);
+		take(n) {
+			return this.make(this.value.slice(0,n));
 		}
-		takeLast(n){
-			const s = this.value.length-n;
-			return this.takeRange(s,this.value.length);
+		takeLast(n) {
+			const s = this.value.length - n;
+			return this.takeFrom(s, this.value.length);
 		}
-		takeRange(start, n){
-			return this.make(this.value.slice(start,n));
+		takeFrom(start, n) {
+			return this.make(this.value.slice(start, start+n));
 		}
 		toString() {
 			return mori.toJs(this.value);
@@ -181,6 +264,9 @@ var _Zha$ = function types() {
 		make(seq) {
 			return new ZhaVec(seq);
 		}
+		type() {
+			return new ZhaKeyword(":Vector");
+		}
 	}
 	class ZhaMap extends ZhaVal {
 		constructor(val) {
@@ -192,6 +278,9 @@ var _Zha$ = function types() {
 		}
 		get(key) {
 			return this.value[key.value];
+		}
+		type() {
+			return new ZhaKeyword(":Map");
 		}
 	}
 	class ZhaAST {
@@ -237,6 +326,22 @@ var _Zha$ = function types() {
 			this.value.apply(undefined)
 		}
 	}
+	class ZhaError {
+		constructor(val) {
+			this.value = val;
+		}
+		type() {
+			return new ZhaKeyword(":Err");
+		}
+	}
+	class ZhaNil extends ZhaVal {
+		constructor() {
+			super(null);
+		}
+		type() {
+			return new ZhaKeyword(":Nil");
+		}
+	}
 	return {
 		isLiteral: (v) => v instanceof ZhaLiteral,
 		isSeq: (v) => v instanceof ZhaSeq,
@@ -255,7 +360,9 @@ var _Zha$ = function types() {
 		ZhaKeyword: ZhaKeyword,
 		ZhaAST: ZhaAST,
 		ZhaMap: ZhaMap,
-		ZhaAsyncFn: ZhaAsyncFn
+		ZhaAsyncFn: ZhaAsyncFn,
+		ZhaNil: ZhaNil,
+		ZhaError: ZhaError
 	}
 }();
 
@@ -273,7 +380,11 @@ function _typeIfy(literal) {
 	}
 	else if (literal.startsWith(':')) {
 		return new _Zha$.ZhaKeyword(literal);
-	} else {
+	}
+	else if(literal === ("nil")){
+		return new _Zha$.ZhaNil();
+	} 
+	else {
 		return new _Zha$.ZhaSymbol(literal);
 	}
 }

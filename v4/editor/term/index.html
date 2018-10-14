@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <title>Zha Editor</title>
 <meta charset="utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Oxygen+Mono" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Space+Mono" rel="stylesheet"/>
 <style type="text/css">
     #console {
         position: absolute;
@@ -13,8 +15,8 @@
 
     .jqconsole {
         padding: 10px;
-        font-family: monospace;
-        font-size: 14px;
+        font-family: 'Oxygen Mono', 'Space Mono', monospace;
+        font-size: 16px;
     }
 
     /* The cursor. */
@@ -32,7 +34,7 @@
     /* The current prompt text color */
 
     .jqconsole-prompt {
-        color: white; //#0d0;
+        color: white;
     }
 
     /* The command history */
@@ -58,11 +60,13 @@
     /* The text color of the output. */
 
     .jqconsole-output {
-        color: #dd0;
+        color: #dd5;
+        font-weight: 600;
     }
 
     .jqconsole-error {
         color: red;
+        font-weight: 700;
     }
 </style>
 <div id="console"></div>

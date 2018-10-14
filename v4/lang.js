@@ -202,7 +202,7 @@ const Zha = function () {
 		}
 		else {
 			//A function declaration form
-			const fnDefn = createFn(undefined, params, ast.body, bindings, env);
+			const fnDefn = createFn(name.value, params, ast.body, bindings, env);
 			env.define(name, fnDefn);
 			return fnDefn;
 		}
@@ -237,7 +237,7 @@ const Zha = function () {
 	}
 
 	function isSplDirective(token) {
-		return token === "if" || token === "loop" || token === '#' || token === 'quote';
+		return token === "if" || token === "loop" || token === '#' || token === 'quote' || token === 'do';
 	}
 	function createFn(name, fnArgs, fnBody, fnBindings, env) {
 		const fnDefn = new _Zha$.ZhaFn((args, callerEnv) => {
@@ -256,9 +256,9 @@ const Zha = function () {
 			}
 			var lexScope = fixScope(fnBindings, fnEnv);
 			var result = evalForm(fnBody, lexScope);
+			//console.log(this.name, fnArgs, result);
 			return result;
 		}, name, fnArgs, env);
-		//env.define(name, fnDefn);
 		return fnDefn;
 	}
 	function evalSplDirective(form, env) {
@@ -289,7 +289,7 @@ const Zha = function () {
 			const args = form.length === 3 ? form[1] : [];
 			const body = form.length === 3 ? form[2] : form[1];
 
-			const fnDefn = createFn(undefined, args, body, [], env);
+			const fnDefn = createFn("#", args, body, [], env);
 			return fnDefn;
 		}
 		else if(directive.value === 'quote'){
@@ -352,7 +352,9 @@ const Zha = function () {
 		//TODO: This is not needed if everything is a ZHAFn
 		//Having it here for now to support both ZhaFn and regular functions(JS)
 		//until things stabilize.
-		return resolvedOP.apply(undefined, args);
+		const results =  resolvedOP.apply(undefined, args);
+		//console.log(resolvedOP.name , args, results);
+		return results;
 	}
 
 	function evalAtom(atom, env) {

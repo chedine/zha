@@ -1,20 +1,16 @@
 //RT
 const RT = function () {
     return {
-        "+": (a, b) => new _Zha$.ZhaNumber(a.value + b.value),
-        "-": (a, b) => new _Zha$.ZhaNumber(a.value - b.value),
-        "*": (a, b) => new _Zha$.ZhaNumber(a.value * b.value),
-        "/": (a, b) => new _Zha$.ZhaNumber(a.value / b.value),
         "<": (a, b) => new _Zha$.ZhaBoolean(a.value < b.value),
         "<=": (a, b) => new _Zha$.ZhaBoolean(a.value <= b.value),
         ">": (a, b) => new _Zha$.ZhaBoolean(a.value > b.value),
-        "&&": (a, b) => new _Zha$.ZhaBoolean(a.value && b.value),
-        "||": (a, b) => new _Zha$.ZhaBoolean(a.value || b.value),
-        "!": (a) => new _Zha$.ZhaBoolean(!a.value),
+        ">=": (a, b) => new _Zha$.ZhaBoolean(a.value > b.value),
         "eq": (a, b) => new _Zha$.ZhaBoolean(a.value === b.value),
-    //    "toUpper": (str) => new _Zha$.ZhaString(str.value.toUpperCase()),
-    //    "toLower": (str) => new _Zha$.ZhaString(str.value.toLowerCase()),
-    //    "substr": (str, from) => new _Zha$.ZhaString(str.value.substr(from.value)),
+        "noteq": (a, b) => new _Zha$.ZhaBoolean(a.value !== b.value),
+        //    "range" : (n) => new _Zha$.ZhaList([...Array(5).keys()]),
+        //    "toUpper": (str) => new _Zha$.ZhaString(str.value.toUpperCase()),
+        //    "toLower": (str) => new _Zha$.ZhaString(str.value.toLowerCase()),
+        //    "substr": (str, from) => new _Zha$.ZhaString(str.value.substr(from.value)),
         "list": new _Zha$.ZhaFn((args, env) => {
             return new _Zha$.ZhaVec(args);
         }),
@@ -30,19 +26,16 @@ const RT = function () {
         "hmap": new _Zha$.ZhaFn((args, env) => {
             return new _Zha$.ZhaMap(args);
         }),
-        "->Str" :new _Zha$.ZhaFn((args, env) => {
+        "->Str": new _Zha$.ZhaFn((args, env) => {
             return new _Zha$.ZhaString(args[0]);
-        }), 
-      //  "conj": (seq, el) => seq.conj(el),
-      //  "get": (seq, index) => seq.get(index),
-       // "nth": (seq, n) => seq.nth(n),
+        }),
+        //  "conj": (seq, el) => seq.conj(el),
+        //  "get": (seq, index) => seq.get(index),
+        // "nth": (seq, n) => seq.nth(n),
         //"count": new _Zha$.ZhaFn((arg) => arg[0].count()),
         //"last": new _Zha$.ZhaFn((arg) => arg[0].last()),
         "call": new _Zha$.ZhaFn((args, env) => args[0].invoke(args.slice(1), env)),
-        "curry": new _Zha$.ZhaFn((args, env) => {
-            const srcFunc = args[0];
-            return new _Zha$.ZhaFn(srcFunc.value, srcFunc._meta.name, srcFunc._meta.args, true);
-        }),
+
         "|>": new _Zha$.ZhaFn((args, env) => {
             const getPiped = (fnList) => {
                 return (_args, _env) => {
@@ -117,18 +110,18 @@ const RT = function () {
             }**/
             return promise;
         }),
-        "fetch/text" : new _Zha$.ZhaAsyncFn((args,env) => {
-            const r =  args[0].text();
+        "fetch/text": new _Zha$.ZhaAsyncFn((args, env) => {
+            const r = args[0].text();
             console.log(r);
             return r;
         }),
-        "apply" : new _Zha$.ZhaFn((args, env) => {
+        "apply": new _Zha$.ZhaFn((args, env) => {
             const fn = args[0];
-            const argArray = _Zha$.isSeq(args[1]) ? args[1].value: args[1];
+            const argArray = _Zha$.isSeq(args[1]) ? args[1].value : args[1];
             const args1 = Array.isArray(argArray) ? argArray : [argArray];
             return fn.invoke([...args1, env]);
         })
-       // "echo": new _Zha$.ZhaFn((args, env) => args[0])
+        // "echo": new _Zha$.ZhaFn((args, env) => args[0])
     }
 }();
 //ENV
@@ -173,7 +166,12 @@ const ENVIRONMENT = function (runtime, root) {
         this.bindings[sym.value] = val;
     }
 };
+
 const ENV = new ENVIRONMENT(RT, undefined);
+ENV.bindings['curry'] = new _Zha$.ZhaFn((args, env) => {
+    const srcFunc = args[0];
+    return new _Zha$.ZhaFn(srcFunc.value, srcFunc._meta.name, srcFunc._meta.args, env, true);
+}, "curry", undefined, ENV);
 
 class Test {
     constructor(v, v1) {
