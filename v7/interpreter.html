@@ -1,0 +1,35 @@
+<html>
+<title>Blank</title>
+
+<body>
+    <script src="types.js"></script>
+	<script src="rt.js"></script>
+	<script src="core.js"></script>
+    <script>
+    </script>
+    <!--<h3>A rough interpreter</h3>
+        <textarea cols="80" rows="5" id="program"></textarea>
+        <div style="margin-top:15px; margin-bottom:15px;">
+            <input type="button" value="parse" onclick="parse()" />
+        </div>
+        <textarea cols="80" rows="3" id="programResults"></textarea>-->
+    <script>
+	  
+	  function print(val){
+		if(_Zha$.isSeq(val)){
+			return mori.toJs(val.value);
+		}
+		else{
+			return val !== undefined ? val.value : "Nothing";
+		}
+	  }
+	  function printComposite(val){
+	  
+	  }
+      function runTest(src){
+          console.log(src, print(Zha.eval(src)[0]));
+      }
+  </script>
+</body>
+
+</html>`
