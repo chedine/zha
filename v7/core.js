@@ -93,30 +93,21 @@ function macro_Hash(ast, pos) {
     const m_ast =  fnVarDef.concat([["fn" , params, read_expand(post, 0)]]);
     return m_ast;
 }
-/**
- * 
- * 
-function macro_EQ(ast, pos) {
-    const tillEq = ast.slice(0, pos);
-    let m_ast = ["def"].concat(tillEq);
-    return [m_ast,pos+1];
+function macro_OPENSQ(ast, pos){
+    const pre = ast.slice(0, pos);
+    const post = ast.slice(pos+1);
+    const block = read_expand(post,0);
+    return pre.concat([...block]);
 }
 
-function macro_Hash(ast, pos) {
-    const ast_pre = ast.slice(0, pos);
-    let params;
-    if (ast_pre.length === 2) {
-        //(def varname) form
-        params = [];
-    } else {
-        params = ast.slice(2);
-    }
-    const ast_post = ast.slice(pos);
-    return ast.slice(0, pos).concat([["fn", params, ast_post]]);
+
+function macro_CLOSESQ(ast, pos){
+    const pre = ast.slice(0, pos);
+    return pre;
 }
- */
+
 const macros = {
-    "=" : macro_EQ, "#" : macro_Hash
+    "=" : macro_EQ, "#" : macro_Hash, "{" : macro_OPENSQ, "}" : macro_CLOSESQ
 }
 
 function read_expand(ast, start){
