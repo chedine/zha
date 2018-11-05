@@ -11,11 +11,16 @@
 <body>
     <div id="qunit"></div>
     <div id="qunit-fixture"></div>
-    <script src="core.js"></script>
     <script src="types.js"></script>
+    <script src="env.js"></script>
+    <script src="reader.js"></script>
+    <script src="eval.js"></script>
+    <script src="core.js"></script>
     <script src="https://code.jquery.com/qunit/qunit-2.7.1.js"></script>
     <script src="test/reader_spec.js"></script>
     <script src="test/types_spec.js"></script>
+    <script src="test/env_spec.js"></script>
+    <script src="test/eval_spec.js"></script>
     <script>
         function addTestSuite(suite){
            for(var i=0;i<=suite.length-2;i=i+2){
@@ -26,6 +31,10 @@
         addTestSuite(ReaderSpec);
         QUnit.module( "Types" );
         addTestSuite(TypeSpec);
+        QUnit.module( "ENV" );
+        addTestSuite(EnvSpec);
+        QUnit.module( "EVAL" );
+        addTestSuite(EvalSpec);
     </script>
 </body>
 

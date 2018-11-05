@@ -1,13 +1,28 @@
 var Reader = Reader || {};
 
 ; (function (reader, undefined) {
-    
+    /**
+     * Only public method of Zha.Reader
+     * Reads the given source code string as AST (list)
+     * You may or may not pass in the entire file contents into this read method, but
+     * this method always assumes that the source string may have more than one forms
+     * hence the return type is always a list (of asts)
+     * @param {} code - String Text
+     */
     reader.read = function read(code) {
         var tokens = tokenize(code);
         var reader = new SourceReader(tokens);
         return readAST(reader);
     }
-
+    /**
+     * The syntax is different from the LISP syntax. In a sense that not all forms
+     * need to be enclosed in an explicit List form '()'.
+     * When a line doesn't begin with a '(', we assume an implicit list unless the line ends with just one token.
+     * EX 1:
+     * sayHi => Is read as a just a token "sayHi"
+     * add 1 3 => Is read as a (add 1 3)
+     * @param {*} reader 
+     */
     function readAST(reader) {
         var token = reader.peek();
         const allForms = [];
@@ -19,13 +34,17 @@ var Reader = Reader || {};
                     reader.next();
                 }
                 else {
-                    while (token !== '\n' && token !== undefined) {
+                    while (token !== undefined && token !== '\n') {
                         const form = readForm(reader);
                         implicitListForm.push(form);
                         token = reader.peek();
                     }
-                    if (implicitListForm.length > 0) {
-                        allForms.push(expandReaderMacros(implicitListForm));
+                    if (implicitListForm.length > 1) {
+                        const expanded = new Zha.List(expandReaderMacros(implicitListForm));
+                        allForms.push(expanded);
+                    }
+                    else if(implicitListForm.length >0){
+                        allForms.push(implicitListForm[0]);
                     }
                 }
             }
@@ -35,8 +54,16 @@ var Reader = Reader || {};
             }
             token = reader.peek();
         }
-        return allForms;
+        return new Zha.List(allForms);
     }
+    /**
+     * Given a statefule Reader, We go through until the Reader is exhausted.
+     * When the next token is '(' , we read what follows as a "List" until we encounter
+     * a matching ')'
+     * When the next token is '[' , we read what follows as a "Vector" until we encounter
+     * a matching ']'
+     * Otherwise, the token is read as just a token/form.
+     */
     function readForm(reader) {
         var token = reader.peek();
         while (token !== undefined) {
@@ -47,7 +74,9 @@ var Reader = Reader || {};
                 return readBlock(reader);
             }
             else {
-                return reader.next();
+                //Atom
+                const token = reader.next();
+                return token === '\n' ? token : Zha.ts.typeIfy(token);
             }
         }
     }
@@ -68,7 +97,7 @@ var Reader = Reader || {};
         } else {
             throw new Error("Malformed List ");
         }
-        return expandReaderMacros(ast);
+        return new Zha.List(expandReaderMacros(ast));
     }
 
     function readBlock(reader) {
@@ -80,7 +109,8 @@ var Reader = Reader || {};
             const form = readForm(reader);
             if (form === '\n') {
                 if (currentLineAsAST.length > 0) {
-                    ast.push(expandReaderMacros(currentLineAsAST));
+                    const expanded = new Zha.List(expandReaderMacros(currentLineAsAST));
+                    ast.push(expanded);
                     currentLineAsAST = [];
                 }
             } else {
@@ -92,7 +122,7 @@ var Reader = Reader || {};
             if (currentLineAsAST.length > 0) {
                 const expanded = expandReaderMacros(currentLineAsAST);
                 if (ast.length > 0) {
-                    ast.push(expanded);
+                    ast.push(new Zha.List(expanded));
                 }
                 else {
                     ast = ast.concat(expanded)
@@ -102,13 +132,13 @@ var Reader = Reader || {};
         } else {
             throw new Error("Malformed List block ");
         }
-        return ast;
+        return new Zha.Vec(ast);
     }
 
     function expandReaderMacros(listForm) {
         var expanded = [].concat(listForm);
         for (var i = 0; i < expanded.length; i++) {
-            if (expanded[i] === '=') {
+            if (expanded[i].value === '=') {
                 expanded = expandAssignment(expanded, i);
                 i = -1;
             }
@@ -120,8 +150,9 @@ var Reader = Reader || {};
         const beforeAssignment = list.slice(0, pos);
         const afterAssignment = list.slice(pos + 1, list.length);
         const params = beforeAssignment.slice(1);
+        const def = new Zha.Symbol("def");
         if (params.length === 0) {
-            let body = ["def"].concat(beforeAssignment);
+            let body = [def].concat(beforeAssignment);
             if (afterAssignment.length > 1 || Array.isArray(afterAssignment[0])) {
                 body.push(afterAssignment);
             } else {
@@ -131,10 +162,10 @@ var Reader = Reader || {};
         } else {
             const fnName = beforeAssignment.slice(0, 1);
             const fnBody = [];
-            fnBody.push("fn");
+            fnBody.push(new Zha.Symbol("fn"));
             fnBody.push(params);
             fnBody.push(afterAssignment);
-            return ["def"].concat(fnName).concat([fnBody]);
+            return [def].concat(fnName).concat([fnBody]);
         }
     }
 
