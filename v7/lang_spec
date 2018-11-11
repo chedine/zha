@@ -1,0 +1,27 @@
+- Lisp at its core
+- Evaluation model follows that of Lisp
+- Surface syntax wouldn't resemble LISP. Tries to be beginner friendly by reducing parens
+
+### Syntax differences
+
+- [1 2 3] will continue to be a vector of 1,2,3
+[   1
+        2 3
+    4
+] - Will be a vector of [1, (2,3), (4)]
+- Newlines inside [] mark a new list
+
+- Hence a function of form
+(def a-mathy-exp 
+    (fn (a b x y)
+        (let (ax (mul a x))
+             (by (mul b y))
+             )))
+
+can also be expressed as 
+
+(def a-mathy-exp [
+    fn (a b x y)
+        let (ax (mul a x))
+        \   (by (mul b y))
+])

@@ -154,7 +154,7 @@ var Reader = Reader || {};
         if (params.length === 0) {
             let body = [def].concat(beforeAssignment);
             if (afterAssignment.length > 1 || Array.isArray(afterAssignment[0])) {
-                body.push(afterAssignment);
+                body.push(new Zha.List(afterAssignment));
             } else {
                 body = body.concat(afterAssignment);
             }
@@ -163,9 +163,15 @@ var Reader = Reader || {};
             const fnName = beforeAssignment.slice(0, 1);
             const fnBody = [];
             fnBody.push(new Zha.Symbol("fn"));
-            fnBody.push(params);
-            fnBody.push(afterAssignment);
-            return [def].concat(fnName).concat([fnBody]);
+            fnBody.push(new Zha.List(params));
+            var fnExpr;
+            if(Zha.ts.isList(afterAssignment[0]) || Zha.ts.isVec(afterAssignment[0])){
+                fnExpr = afterAssignment[0];
+            }else{
+                fnExpr = new Zha.List(afterAssignment);
+            }
+            fnBody.push(fnExpr);
+            return [def].concat(fnName).concat(new Zha.List(fnBody));
         }
     }
 

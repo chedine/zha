@@ -196,6 +196,9 @@ var Zha = Zha || {};
 		takeFrom(start, n) {
 			return this.make(this.value.slice(start, start+n));
 		}
+		slice(start, total) {
+			return this.make(this.value.slice(start.value, total.value));
+		}
 	}
 	
 	zha.List = class extends ZhaSeq {
@@ -221,6 +224,20 @@ var Zha = Zha || {};
 		}
 		type(){
 			return new zha.Keyword(":Vec");
+		}
+	}
+	zha.Fn = class extends Val { 
+		//For now Vec behaves the same as List as Native Array type.
+		constructor(val, fnargs){
+			super(val);
+			this._meta = {type: 8, args:fnargs};
+		}
+		invoke(args){
+			//TODO: env may be needed to curry the fn
+			return this.value.apply(undefined,[args]);
+		}
+		type(){
+			return new zha.Keyword(":Fn");
 		}
 	}
 	// Type utils
@@ -259,11 +276,12 @@ var Zha = Zha || {};
 
 	zha.ts.isNumber = (z) => z.type().equals(NUMBER);
 	zha.ts.isBool = (z) => z.type().equals(BOOLEAN);
-	zha.ts.isFn = (z) => z.type().equals(FN);
+	zha.ts.isFn = (z) => z.type && z.type().equals(FN);
 	zha.ts.isList = (z) => z.type().equals(LIST);
 	zha.ts.isVec = (z) => z.type().equals(VEC);
 	zha.ts.isString = (z) => z.type().equals(STRING);
 	zha.ts.isKeyword = (z) => z.type().equals(KEYWORD);
 	zha.ts.isSymbol = (z) => z.type().equals(SYM);
+	zha.ts.Nil = new zha.Nil();
 
 })(window.Zha = window.Zha || {});

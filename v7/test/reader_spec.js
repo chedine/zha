@@ -79,10 +79,10 @@ ReaderSpec = function () {
         map f seq = loop seq f
     `;
         let ast = read(code);
-        assert.equal(ast.length, 3, "AST length with just one form");
-        let calculusForm = ast[0];
-        assert.equal(calculusForm.length, 3, "A fn declaration is always a list of 3");
-        assert.equal(calculusForm[2].length, 3, "FN is made of 3 forms. fn, params,body");
+        assert.equal(ast.count().value, 3, "AST length with just one form");
+        let calculusForm = ast.first();
+        assert.equal(calculusForm.count().value, 3, "A fn declaration is always a list of 3");
+        assert.equal(calculusForm.get(2).count().value, 3, "FN is made of 3 forms. fn, params,body");
     }
     emptyFileTests = function (assert) {
         let code = `
@@ -165,8 +165,8 @@ ReaderSpec = function () {
         "One liner List forms", oneLineListTests,
         "One liner atoms", oneLineAtomTests,
         "Multi line std list forms", multiLineListTests,
-        /**"Unconventional forms", unconventionalListTests,
-        "An empty file", emptyFileTests,
+        "Unconventional forms", unconventionalListTests
+       /** "An empty file", emptyFileTests,
         "Mixed bags", mixedBagTests,
         "Assignment macros" , assignMacrosTests,
         "Nested Assignment Macros" , nestedAssignMacrosTests**/

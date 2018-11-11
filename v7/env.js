@@ -25,7 +25,8 @@ const ENVIRONMENT = function (runtime, root) {
 Zha.Env = ENVIRONMENT;
 const bindings = {
     "+" : (a, b) => new Zha.Number(a.value + b.value),
-    "-" : (a, b) => new Zha.Number(a.value - b.value)
+    "-" : (a, b) => new Zha.Number(a.value - b.value),
+    "*" : (a, b) => new Zha.Number(a.value * b.value)
 }
 
 Zha.RT = new Zha.Env(bindings, undefined);

@@ -13,7 +13,96 @@ EvalSpec = function () {
         assert.equal(evalAtom('5').value, 5, "A number atom must eval to itself");
         assert.equal(evalAtom('false').value, false, "A Bool atom must eval to itself");
     }
+
+    simpleListForms = function (assert) {
+        const evalAtom = (src) => {
+            const ast = read(src).first();
+            const result = eval(ast);
+            return result;
+        }
+
+        assert.equal(evalAtom('(+ 5 6)').value, 11, "(+ 5 6) must eval to 11");
+        assert.equal(evalAtom('(+ 5 (+ 7 1))').value, 13, "Operands as a list are expanded before application");
+    }
+
+    defFormTests = function(assert){
+        const code = `
+        a = 55
+        (+ a a)
+        b = + a a
+        b
+        c = + a b
+        c
+        `;
+        const ast = read(code);
+        eval(ast.first());
+        var result = eval(ast.second());
+        eval(ast.get(2));
+        var resultOfB = eval(ast.get(3));
+
+        eval(ast.get(4));
+        var resultOfC = eval(ast.get(5));
+
+        assert.equal(result.value, 110, "defined variable a must be accessible");
+        assert.equal(resultOfB.value, 110, "defined variable a must be accessible");
+        assert.equal(resultOfC.value, 165, "defined variable a must be accessible");
+    }
+    fnTests = function(assert) {
+        const code = `
+        (def plus (fn (a b) (+ a b)))
+        plus 5 6
+        `
+        const ast = read(code);
+        eval(ast.first());
+        var result = eval(ast.second());
+        assert.equal(result.value, 11, "define");
+    }
+
+    fnTests1 = function(assert) {
+        const code = `
+        plus a b = + a b
+        plus 5 6
+        `
+        const ast = read(code);
+        eval(ast.first());
+        var result = eval(ast.second());
+        assert.equal(result.value, 11, "define");
+    }
+
+    function simpleConditionalTest(assert) {
+        var code = 'if true "this is true" "this is false"';
+        var ast = read(code);
+        assert.equal(eval(ast.first()).value , "this is true", "Must be true");
+        code = 'if false "this is true" "this is false"';
+        ast = read(code);
+        assert.equal(eval(ast.first()).value , "this is false", "Must be false");
+
+        code = 'if false "this is true"';
+        var ast = read(code);
+        assert.equal(eval(ast.first()).value , null, "Must be null");
+    }
+
+    function simpleBlockTest(assert){
+        var code = `
+            equation a x b y = [
+                ax = * a x
+                by = * b y
+                + ax by
+            ]
+            equation 1 2 3 4
+        `;
+        var ast = read(code);
+        eval(ast.first());
+        var result = eval(ast.second());
+        assert.equal(result.value , 14, "must equate to 14")
+    }
     return [
-        "Atoms eval to itself", simpleEvalTests
+        "Atoms eval to itself", simpleEvalTests,
+        "List forms are treated as fn applications" , simpleListForms,
+        "def form defines a binding in current env" , defFormTests,
+        "def fn defines a new function" , fnTests,
+        "new function" , fnTests1,
+        "if/else tests", simpleConditionalTest,
+        "simple block tests", simpleBlockTest
     ];
 }();
