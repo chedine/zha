@@ -3,10 +3,10 @@ var Zha = Zha || {};
 ; (function (zha, undefined) {
 
 	Val = class {
-		constructor(val){
+		constructor(val) {
 			this.value = val;
 		}
-		value(){
+		value() {
 			return this.value;
 		}
 	}
@@ -47,8 +47,8 @@ var Zha = Zha || {};
 		count() {
 			return new zha.Number(this.value.length);
 		}
-		asVec(arrayOfStr){
-			if(arrayOfStr === null || arrayOfStr === undefined){
+		asVec(arrayOfStr) {
+			if (arrayOfStr === null || arrayOfStr === undefined) {
 				return new zha.Nil();
 			}
 			const s1 = [];
@@ -75,7 +75,7 @@ var Zha = Zha || {};
 			const s = this.value.match(r(regex.value));
 			return this.asVec(s);
 		}
-		add(str1){
+		add(str1) {
 			return new zha.String(this.value + str1.value);
 		}
 		type() {
@@ -97,46 +97,51 @@ var Zha = Zha || {};
 		not(other) {
 			return new ZhaBoolean(!this.value);
 		}
-		type(){
+		type() {
 			return new Zha.Keyword(":Boolean");
 		}
 	}
 	//Symbol type
-	zha.Symbol = class extends Val{
-		constructor(val){
+	zha.Symbol = class extends Val {
+		constructor(val) {
 			super(val);
-			this._meta = {type: 4};
+			this._meta = { type: 4 };
 		}
-		type(){
+		type() {
 			return new Zha.Keyword(":Symbol");
 		}
 	}
 	//NIL 
-	zha.Nil = class{
-		constructor(){
+	zha.Nil = class {
+		constructor() {
 			this.value = null;
-			this._meta = {type: -1};
+			this._meta = { type: -1 };
 		}
-		type(){
+		type() {
 			return new Zha.Keyword(":Nil");
 		}
 	}
 	// Keyword
-	zha.Keyword = class extends Val{
-		constructor(v){
+	zha.Keyword = class extends Val {
+		constructor(v) {
 			super(v);
-			this._meta = {type: 5};
+			this._meta = { type: 5 };
 		}
-		equals(other){
-			return other instanceof zha.Keyword && this.value === other.value ;
+		equals(other) {
+			return other instanceof zha.Keyword && this.value === other.value;
 		}
-		type(){
+		type() {
 			return new Zha.Keyword(":Keyword");
 		}
 	}
 	ZhaSeq = class extends Val {
 		constructor(val) {
-			super([...val]);
+			if (val) {
+				super([...val]);
+			}
+			else {
+				super([]);
+			}
 		}
 		conj(el) {
 			return this.make([...this.value, el]);
@@ -149,7 +154,7 @@ var Zha = Zha || {};
 			_new[i] = el;
 			return this.make(_new);
 		}
-		updatein(i,el){
+		updatein(i, el) {
 
 		}
 		get(i, defaultValue) {
@@ -187,56 +192,56 @@ var Zha = Zha || {};
 			return this.make(this.value.slice(n.value));
 		}
 		take(n) {
-			return this.make(this.value.slice(0,n));
+			return this.make(this.value.slice(0, n));
 		}
 		takeLast(n) {
 			const s = this.value.length - n;
 			return this.takeFrom(s, this.value.length);
 		}
 		takeFrom(start, n) {
-			return this.make(this.value.slice(start, start+n));
+			return this.make(this.value.slice(start, start + n));
 		}
 		slice(start, total) {
 			return this.make(this.value.slice(start.value, total.value));
 		}
 	}
-	
+
 	zha.List = class extends ZhaSeq {
-		constructor(val){
+		constructor(val) {
 			super(val);
-			this._meta = {type: 6};
+			this._meta = { type: 6 };
 		}
 		make(seq) {
 			return new zha.List(seq);
 		}
-		type(){
+		type() {
 			return new zha.Keyword(":List");
 		}
-	 }
-	zha.Vec = class extends zha.List { 
+	}
+	zha.Vec = class extends zha.List {
 		//For now Vec behaves the same as List as Native Array type.
-		constructor(val){
+		constructor(val) {
 			super(val);
-			this._meta = {type: 7};
+			this._meta = { type: 7 };
 		}
 		make(seq) {
 			return new zha.Vec(seq);
 		}
-		type(){
+		type() {
 			return new zha.Keyword(":Vec");
 		}
 	}
-	zha.Fn = class extends Val { 
+	zha.Fn = class extends Val {
 		//For now Vec behaves the same as List as Native Array type.
-		constructor(val, fnargs){
+		constructor(val, fnargs) {
 			super(val);
-			this._meta = {type: 8, args:fnargs};
+			this._meta = { type: 8, args: fnargs };
 		}
-		invoke(args){
+		invoke(args) {
 			//TODO: env may be needed to curry the fn
-			return this.value.apply(undefined,[args]);
+			return this.value.apply(undefined, [args]);
 		}
-		type(){
+		type() {
 			return new zha.Keyword(":Fn");
 		}
 	}

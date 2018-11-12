@@ -26,7 +26,10 @@ Zha.Env = ENVIRONMENT;
 const bindings = {
     "+" : (a, b) => new Zha.Number(a.value + b.value),
     "-" : (a, b) => new Zha.Number(a.value - b.value),
-    "*" : (a, b) => new Zha.Number(a.value * b.value)
+    "*" : (a, b) => new Zha.Number(a.value * b.value),
+    "inc": (a) => new Zha.Number(a.value+1),
+    "list" : (...args) => new Zha.Vec(args),
+    "conj" : (seq, val) => seq.conj(val)
 }
 
 Zha.RT = new Zha.Env(bindings, undefined);

@@ -93,7 +93,7 @@ ReaderSpec = function () {
     
     `;
         let ast = read(code);
-        assert.equal(ast.length, 0, "A file with just CRLF, Tabs and spaces shud have 0 forms");
+        assert.equal(ast.count().value, 0, "A file with just CRLF, Tabs and spaces shud have 0 forms");
     }
     mixedBagTests = function (assert) {
         let code = `
@@ -108,32 +108,32 @@ ReaderSpec = function () {
     (def add (fn (x y) (+ x y)))
     `;
         let ast = read(code);
-        assert.equal(ast.length, 4, "4 forms are expected");
-        let calculusForm = ast[0];
-        assert.equal(calculusForm.length, 3, "Its a list of 3 atoms");
-        let lastForm = ast[3];
-        assert.equal(lastForm.length, 3, "A std fn defn should have 3 forms")
+        assert.equal(ast.count().value, 4, "4 forms are expected");
+        let calculusForm = ast.first();
+        assert.equal(calculusForm.count().value, 3, "Its a list of 3 atoms");
+        let lastForm = ast.get(2);
+        assert.equal(lastForm.count().value, 3, "A std fn defn should have 3 forms")
     }
     assignMacrosTests = function(assert){
         let code = "age = 24";
-        let ast = read(code)[0];
-        assert.equal(ast.length, 3, "name = value expands as a list of 3 forms")
-        assert.equal(ast[0].value, "def", "name = value should expand as a def");
-        assert.equal(ast[1].value, "age", "name = value should expand as a def");
-        assert.equal(ast[2].value, 24, "name = value should expand as a def");
+        let ast = read(code).first();
+        assert.equal(ast.count().value, 3, "name = value expands as a list of 3 forms")
+        assert.equal(ast.first().value, "def", "name = value should expand as a def");
+        assert.equal(ast.second().value, "age", "name = value should expand as a def");
+        assert.equal(ast.get(2).value, 24, "name = value should expand as a def");
 
         code = "add x y = + x y";
-        ast = read(code)[0];
-        assert.equal(ast.length, 3, "fn p1 p2 = body expands as a list of 3 forms")
-        assert.equal(ast[0].value, "def", "First token must be def");
-        assert.equal(ast[1].value, "add", "Second token must be the name of assignment var");
-        const fn = ast[2];
-        assert.equal(fn.length, 3, "A fn is always 3");
-        assert.equal("fn", fn[0].value, "First token is fn");
-        assert.equal(fn[1].length, 2, "Add fn has two params");
-        assert.equal(fn[1][0].value, "x", "First param is x");
-        assert.equal(fn[2].length, 3, "Fn body has three forms");
-        assert.equal(fn[2][0].value, "+", "Add fn has two params");
+        ast = read(code).first();
+        assert.equal(ast.count().value, 3, "fn p1 p2 = body expands as a list of 3 forms")
+        assert.equal(ast.first().value, "def", "First token must be def");
+        assert.equal(ast.second().value, "add", "Second token must be the name of assignment var");
+        const fn = ast.get(2);
+        assert.equal(fn.count().value, 3, "A fn is always 3");
+        assert.equal("fn", fn.first().value, "First token is fn");
+        assert.equal(fn.second().count().value, 2, "Add fn has two params");
+        assert.equal(fn.second().first().value, "x", "First param is x");
+        assert.equal(fn.get(2).count().value, 3, "Fn body has three forms");
+        assert.equal(fn.get(2).first().value, "+", "Add fn has two params");
     }
     nestedAssignMacrosTests = function(assert){
         let code = `
@@ -142,34 +142,32 @@ ReaderSpec = function () {
             by = mul b y
             sum ax ay
         ]`;
-        const ast = read(code)[0];   
-        assert.equal(ast.length, 3, "fn p1 p2 = body expands as a list of 3 forms")
-        assert.equal(ast[0].value, "def", "First token must be def");
-        assert.equal(ast[1].value, "calculus", "Second token must be the name of assignment var");
-        const fn = ast[2];
-        assert.equal(fn.length, 3, "A fn is always 3");
-        assert.equal("fn", fn[0].value, "First token is fn");
-        assert.equal(fn[1].length, 4, "Calculus fn must have 4 params");
-        assert.equal(fn[1][0].value, "a", "First param is a");
-        assert.equal(fn[1][1].value, "b", "First param is a");
+        const ast = read(code).first();   
+        assert.equal(ast.count().value, 3, "fn p1 p2 = body expands as a list of 3 forms")
+        assert.equal(ast.first().value, "def", "First token must be def");
+        assert.equal(ast.second().value, "calculus", "Second token must be the name of assignment var");
+        const fn = ast.get(2);
+        assert.equal(fn.count().value, 3, "A fn is always 3");
+        assert.equal("fn", fn.first().value, "First token is fn");
+        assert.equal(fn.second().count().value, 4, "Calculus fn must have 4 params");
+        assert.equal(fn.second().first().value, "a", "First param is a");
+        assert.equal(fn.second().second().value, "b", "First param is a");
 
-        const fnBody = fn[2];
-        const firstBinding = fnBody[0][0];
-        assert.equal(fnBody.length, 1, "Body is a block having 3 lists");
-        assert.equal(firstBinding[0].value, "def", "Body is a block having 3 lists");
-        assert.equal(firstBinding.length, 3, "Binding is a list of 3");
-        assert.equal(firstBinding[2].length, 3, "Binding body is a list of 3");
-        assert.equal(firstBinding[2][2].value, "x", "Binding body is mul a x");
+        const fnBody = fn.get(2);
+        const bindings = fnBody.last();
+        assert.equal(fnBody.count().value, 3, "Body is a block having 3 lists");
+        //assert.equal(bindings.first().value, "def", "Body is a block having 3 lists");
+        assert.equal(bindings.count().value, 3, "Binding is a list of 3");
     }
     return [
         "One liner List forms", oneLineListTests,
         "One liner atoms", oneLineAtomTests,
         "Multi line std list forms", multiLineListTests,
-        "Unconventional forms", unconventionalListTests
-       /** "An empty file", emptyFileTests,
+        "Unconventional forms", unconventionalListTests,
+        "An empty file", emptyFileTests,
         "Mixed bags", mixedBagTests,
         "Assignment macros" , assignMacrosTests,
-        "Nested Assignment Macros" , nestedAssignMacrosTests**/
+        "Nested Assignment Macros" , nestedAssignMacrosTests
     ]
 
 }();

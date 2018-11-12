@@ -96,6 +96,18 @@ EvalSpec = function () {
         var result = eval(ast.second());
         assert.equal(result.value , 14, "must equate to 14")
     }
+    function simpleLoopTest(assert){
+        var code = `
+        map seq f = loop seq (conj $state (f $val))
+        my-list = list 1 2 3 4
+        map my-list inc
+        `;
+        var ast = read(code);
+        eval(ast.first());
+        eval(ast.second());
+        var result = eval(ast.get(2));
+        assert.equal(result.value[0].value , 2, "Must be 2");
+    }
     return [
         "Atoms eval to itself", simpleEvalTests,
         "List forms are treated as fn applications" , simpleListForms,
@@ -103,6 +115,7 @@ EvalSpec = function () {
         "def fn defines a new function" , fnTests,
         "new function" , fnTests1,
         "if/else tests", simpleConditionalTest,
-        "simple block tests", simpleBlockTest
+        "simple block tests", simpleBlockTest,
+       "Simple Looping construct tests", simpleLoopTest
     ];
 }();
