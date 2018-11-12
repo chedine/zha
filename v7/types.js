@@ -133,6 +133,9 @@ var Zha = Zha || {};
 		type() {
 			return new Zha.Keyword(":Keyword");
 		}
+		invoke(target){
+			return target.get(this);
+		}
 	}
 	ZhaSeq = class extends Val {
 		constructor(val) {
@@ -245,6 +248,41 @@ var Zha = Zha || {};
 			return new zha.Keyword(":Fn");
 		}
 	}
+	zha.HMap = class extends Val {
+		//For now Vec behaves the same as List as Native Array type.
+		constructor(val) {
+			const obj = {};
+			for(var i=0;i<val.length-1;i=i+2){
+				obj[val[i].value] = val[i+1];
+			}
+			super(obj);
+			this._meta = { type: 9 };
+		}
+		make(seq) {
+			return new zha.HMap(seq);
+		}
+		get(key){
+			return this.value[key.value];
+		}
+		set(k,v){
+			//TODO: Return a new Map
+		}
+		count(){
+			return new zha.Number(Object.keys(this.value).length);
+		}
+		keys(){
+			//Assumes keywords only used as keys
+			const _keys = Object.keys(this.value);
+			const _keyList = [];
+			for(var i=0;i<_keys.length;i++){
+				_keyList.push(new zha.Keyword(_keys[i]));
+			}
+			return new zha.Vec(_keyList);
+		}
+		type() {
+			return new zha.Keyword(":Vec");
+		}
+	}
 	// Type utils
 	zha.ts = zha.ts || {};
 	const NUMBER = new zha.Keyword(":Number");
@@ -285,7 +323,7 @@ var Zha = Zha || {};
 	zha.ts.isList = (z) => z.type().equals(LIST);
 	zha.ts.isVec = (z) => z.type().equals(VEC);
 	zha.ts.isString = (z) => z.type().equals(STRING);
-	zha.ts.isKeyword = (z) => z.type().equals(KEYWORD);
+	zha.ts.isKeyword = (z) => z.type && z.type().equals(KEYWORD);
 	zha.ts.isSymbol = (z) => z.type().equals(SYM);
 	zha.ts.Nil = new zha.Nil();
 

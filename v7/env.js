@@ -29,7 +29,8 @@ const bindings = {
     "*" : (a, b) => new Zha.Number(a.value * b.value),
     "inc": (a) => new Zha.Number(a.value+1),
     "list" : (...args) => new Zha.Vec(args),
-    "conj" : (seq, val) => seq.conj(val)
+    "conj" : (seq, val) => seq.conj(val),
+    "hashmap" : (...nvp) => new Zha.HMap(nvp)
 }
 
 Zha.RT = new Zha.Env(bindings, undefined);

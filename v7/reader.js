@@ -73,6 +73,9 @@ var Reader = Reader || {};
             else if (token === '[') {
                 return readBlock(reader);
             }
+            else if (token === '{') {
+                return readMap(reader);
+            }
             else {
                 //Atom
                 const token = reader.next();
@@ -100,6 +103,25 @@ var Reader = Reader || {};
         return new Zha.List(expandReaderMacros(ast));
     }
 
+    function readMap(reader) {
+        reader.next();// beginning of Map. consume
+        var token = reader.peek();
+        var ast = [];
+        while (token !== '}' && token !== undefined) {
+            const form = readForm(reader);
+            if (form !== '\n') {
+                ast.push(form);
+            }
+            token = reader.peek();
+        }
+        if (token === '}') {
+            reader.next();
+        } else {
+            throw new Error("Malformed Map ");
+        }
+        var mapAST = [new Zha.Symbol("hashmap"), ...(expandReaderMacros(ast))];
+        return new Zha.List(mapAST);
+    }
     function readBlock(reader) {
         reader.next();// beginning of list block. consume
         var token = reader.peek();

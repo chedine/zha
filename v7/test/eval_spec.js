@@ -108,6 +108,22 @@ EvalSpec = function () {
         var result = eval(ast.get(2));
         assert.equal(result.value[0].value , 2, "Must be 2");
     }
+    function hmapTest(assert){
+        var code = `
+        my-map = {
+            :k1 "dinesh"
+            :k2 5
+        }
+        my-map
+        :k1 my-map
+        `;
+        var ast = read(code);
+        eval(ast.first());
+        var result = eval(ast.second());
+        assert.equal(result.count().value , 2, "Must have 2 keys");
+        result = eval(ast.get(2));
+        assert.equal(result.value , "dinesh", "Must be dinesh");
+    }
     return [
         "Atoms eval to itself", simpleEvalTests,
         "List forms are treated as fn applications" , simpleListForms,
@@ -116,6 +132,7 @@ EvalSpec = function () {
         "new function" , fnTests1,
         "if/else tests", simpleConditionalTest,
         "simple block tests", simpleBlockTest,
-       "Simple Looping construct tests", simpleLoopTest
+       "Simple Looping construct tests", simpleLoopTest,
+       "HashMap tests", hmapTest
     ];
 }();

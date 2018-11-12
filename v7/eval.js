@@ -2,14 +2,22 @@ var ZEVAL = ZEVAL || {};
 ; (function (_eval, undefined) {
 
     const SPL_OPS = {
-        "fn": true, "#": true, "def": true, "if": true, "loop":true
+        "fn": true, "#": true, "def": true, "if": true, "loop": true
     }
-
+    const SPL_SYM = {
+        "stateVar": new Zha.Symbol("$state"),
+        "idVar": new Zha.Symbol("$idx"),
+        "valVar": new Zha.Symbol("$val")
+    }
+    /**
+     * Public API to eval an expression.
+     * @param {} srcAST 
+     */
     _eval.eval = function (srcAST) {
         return evalAST(srcAST, Zha.RT);
     }
 
-    const evalAST = function (ast, env) {
+    function evalAST(ast, env) {
         if (Zha.ts.isList(ast)) {
             return evalList(ast, env);
         }
@@ -80,14 +88,11 @@ var ZEVAL = ZEVAL || {};
             const end = iterable.count().value;
             const incrementor = 1;
             const loopEnv = new Zha.Env({}, env);
-            const stateSym = new Zha.Symbol("$state");
-            const idxSym = new Zha.Symbol("$idx");
-            const valSym = new Zha.Symbol("$val");
-            var state = new Zha.Vec();
-            for(var i = start;i<end;i=i+incrementor){
-                loopEnv.define(stateSym, state);
-                loopEnv.define(idxSym, new Zha.Number(i));
-                loopEnv.define(valSym, iterable.get(i));
+            var state = new Zha.Vec(); // mutable reference
+            for (var i = start; i < end; i = i + incrementor) {
+                loopEnv.define(SPL_SYM.stateVar, state);
+                loopEnv.define(SPL_SYM.idVar, new Zha.Number(i));
+                loopEnv.define(SPL_SYM.valVar, iterable.get(i));
                 state = evalAST(loopBody, loopEnv);
             }
             return state;
@@ -103,6 +108,9 @@ var ZEVAL = ZEVAL || {};
     function invoke(fnLike, args) {
         if (Zha.ts.isFn(fnLike)) {
             return fnLike.invoke(args.value);
+        }
+        else if(Zha.ts.isKeyword(fnLike)){
+            return fnLike.invoke(args.first());
         }
         else {
             //Assuming its a native fn call
