@@ -1,0 +1,130 @@
+<!doctype html>
+
+<title>Zha Editor</title>
+<meta charset="utf-8" />
+
+<link rel="stylesheet" href="cm/lib/codemirror.css">
+<script src="cm/lib/codemirror.js"></script>
+<script src="cm/addon/mode/simple.js"></script>
+<script src="cm/addon/display/rulers.js"></script>
+<script src="cm/addon/selection/active-line.js"></script>
+<script src="cm/mode/xml/xml.js"></script>
+<link rel="stylesheet" href="cm/theme/mdn-like.css">
+<link rel="stylesheet" href="cm/theme/dracula.css">
+<script src="https://unpkg.com/codeflask/build/codeflask.min.js"></script>
+<style type="text/css">
+	.CodeMirror {
+		border: 1px solid #eee;
+		height: auto;
+		font-family: 'PT Mono';
+		font-size: 0.8rem;
+	}
+
+	.code-section {
+		display: flex;
+		flex-direction: row;
+		margin-top: 10px;
+		/**border:1px solid #c0c0c0**/
+	}
+
+	.code-section-editor {
+		border: 1px solid #d9d9d9;
+		margin: 0px;
+		flex-basis: 50%
+	}
+
+	.code-section-extra-panel {
+		border: 1px solid #d9d9d9;
+		margin-left: -4px;
+		flex-basis: 50%;
+		border-left: 1px solid #c0c0c0;
+		/*background-color: #282a36 !important*/
+	}
+
+	.container {
+		margin: 10px;
+		font-family: 'PT Mono', monospace;
+		font-size: 0.8rem;
+	}
+
+	.component {
+		display: flex;
+		flex-direction: column;
+		width: 400px;
+		border: 1px solid #d9d9d9;
+		color:white;
+	}
+	.comp-header{
+		background-color: black;
+		color:white;
+		font-size:0.9rem;
+		padding:5px;
+	}
+	.comp-row {
+		display: flex;
+		flex-direction: row;
+		flex-basis: 98%;
+		border-bottom: 1px solid black;
+		cursor: pointer;
+	}
+
+	.comp-namecol {
+		flex-basis: 35%;
+		background-color:#606060;
+		padding:5px;
+	}
+
+	.comp-valuecol {
+		flex-basis: 65%;
+		padding:5px;
+		background-color:#a9a9a9;
+	}
+
+	.comp-editor {
+		flex-basis: 99%;
+		color: #d9d9d9;
+		min-height: 100px;
+	}
+</style>
+<link href="https://fonts.googleapis.com/css?family=PT+Mono" rel="stylesheet">
+
+<body class="cm-fat-cursor">
+
+	<div class="container">
+		<div class="component">
+			<div class="comp-header">MyComponent</div>
+			<div class="comp-row">
+				<div class="comp-namecol">counter</div>
+				<div class="comp-valuecol">0</div>
+			</div>
+			<div class="comp-row">
+				<div class="comp-namecol">name</div>
+				<div class="comp-valuecol">Dinesh</div>
+			</div>
+			<div class="comp-editor" id="editor1"></div>
+		</div>
+	</div>
+
+	<script>
+		function createEditor(dom) {
+			const rulers = [{ color: "#fcc", column: 70, lineStyle: "dashed" }];
+			const editor = CodeMirror(dom, {
+				lineNumbers: true,
+				lineWrapping: true,
+				mode: "zha",
+				viewportMargin: Infinity,
+				matchBrackets: true,
+				styleActiveLine: true,
+				cursorBlinkRate: 0,
+				//rulers: rulers,
+				theme: "dracula"
+			});
+			editor.refresh();
+			editor.getDoc().setValue("calculus a b x y = [\n ax = mul a x \n by = mul b y \n add ax by\n]\n");
+			return editor;
+		}
+		createEditor(document.querySelector("#editor1"));
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,140 @@
+<!doctype html>
+
+<title>Zha Editor</title>
+<meta charset="utf-8" />
+
+<link rel="stylesheet" href="cm/lib/codemirror.css">
+<script src="cm/lib/codemirror.js"></script>
+<script src="cm/addon/mode/simple.js"></script>
+<script src="cm/addon/display/rulers.js"></script>
+<script src="cm/addon/selection/active-line.js"></script>
+<script src="cm/mode/xml/xml.js"></script>
+<link rel="stylesheet" href="cm/theme/mdn-like.css">
+<link rel="stylesheet" href="cm/theme/dracula.css">
+<style type="text/css">
+	.CodeMirror pre>* {
+		text-indent: 0px;
+	}
+
+	.CodeMirror {
+		width: 100%;
+		height: auto;
+		line-height:18px;
+	}
+
+	.CodeMirror {
+		border: 1px solid #eee;
+		height: 1000px;
+		font-family: monospace;
+		font-size: 14px;
+	}
+	.cm-fat-cursor{
+		color:black
+	}
+
+</style>
+
+<body class="cm-fat-cursor">
+	<script>
+		/* Example definition of a simple mode that understands a subset of
+	 * JavaScript:
+	 */
+
+		CodeMirror.defineSimpleMode("zha", {
+			// The start state contains the rules that are intially used
+			start: [
+				// The regex matches the token, the token property contains the type
+				{ regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string" },
+				// You can match multiple tokens at once. Note that the captured
+				// groups must span the whole string in this case
+				{
+					regex: /(function)(\s+)([a-z$][\w$]*)/,
+					token: ["keyword", null, "variable-2"]
+				},
+				// Rules are matched in the order in which they appear, so there is
+				// no ambiguity between this one and the one above
+				{ regex: /(?:where|if|do|this|=)\b/, token: "keyword" },
+				{ regex: /true|false|nil|#/, token: "atom" },
+				{
+					regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i,
+					token: "number"
+				},
+				{ regex: /\/\/.*/, token: "comment" },
+				{ regex: /\/(?:[^\\]|\\.)*?\//, token: "variable-3" },
+				// A next property will cause the mode to move to a different state
+				{ regex: /\/\*/, token: "comment", next: "comment" },
+				{ regex: /[-+\/*=<>!]+/, token: "operator" },
+				// indent and dedent properties guide autoindentation
+				{ regex: /[\{\[\(]/, indent: true },
+				{ regex: /[\}\]\)]/, dedent: true },
+				{ regex: /[a-z$][\w$]*/, token: "variable" },
+				// You can embed other modes with the mode property. This rule
+				// causes all code between << and >> to be highlighted with the XML
+				// mode.
+				{ regex: /<</, token: "meta", mode: { spec: "xml", end: />>/ } }
+			],
+			// The multi-line comment state.
+			comment: [
+				{ regex: /.*?\*\//, token: "comment", next: "start" },
+				{ regex: /.*/, token: "comment" }
+			],
+			// The meta property contains global information about the mode. It
+			// can contain properties like lineComment, which are supported by
+			// all modes, and also directives like dontIndentStates, which are
+			// specific to simple modes.
+			meta: {
+				dontIndentStates: ["comment"],
+				lineComment: "//"
+			}
+		});
+		const rulers = [{color: "#fcc", column: 70, lineStyle: "dashed"}];
+		const editor = CodeMirror(document.body, {
+			lineNumbers: true,
+			lineWrapping: true,
+			mode: "zha",
+			viewportMargin: Infinity,
+			matchBrackets: true,
+			styleActiveLine: true,
+			cursorBlinkRate: 0,
+			rulers:rulers,
+		  theme : "dracula"
+		});
+		
+		editor.on("renderLine", function (cm, line, elt) {
+			const charWidth = editor.defaultCharWidth(), basePadding = 4;
+			var off = CodeMirror.countColumn(line.text, null, cm.getOption("tabSize")) * charWidth;
+			elt.style.textIndent = "-" + off + "px";
+			elt.style.paddingLeft = (basePadding + off) + "px";
+		});
+
+		editor.setOption("extraKeys", {
+			"Shift-Enter": function (cm) {
+				evaluate();
+			},
+		});
+		editor.refresh();
+
+		const widgets = [];
+		function evaluate() {
+			editor.operation(function () {
+				const currentLine = editor.doc.getCursor().line;
+				var d = document.createElement("div");
+				d.innerHTML = "<div style='color:#A9A9A9;font-size:12px; position:absolute; top:-19px;left:640px;'>This is a result</div>"
+				//<div style='border-bottom:1px solid rgb(221,221,221);margin-bottom:2px;'>&nbsp;</div>";
+				widgets.push({ line: currentLine, node: d });
+				for (var i = 0; i < widgets.length; i++) {
+					editor.addLineWidget(widgets[i].line, widgets[i].node, { coverGutter: false, noHScroll: true });
+				}
+				addNewLine();
+			});
+		}
+
+		function addNewLine() {
+			const doc = editor.getDoc();
+			var cursor = doc.getCursor();
+			doc.replaceRange('\n', cursor);
+		}
+	</script>
+</body>
+
+</html>

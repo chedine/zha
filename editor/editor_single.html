@@ -1,0 +1,99 @@
+<!doctype html>
+
+<title>Zha Editor</title>
+<meta charset="utf-8" />
+
+<link rel="stylesheet" href="cm/lib/codemirror.css">
+<script src="cm/lib/codemirror.js"></script>
+<script src="cm/addon/mode/simple.js"></script>
+<script src="cm/addon/display/rulers.js"></script>
+<script src="cm/addon/selection/active-line.js"></script>
+<script src="cm/mode/xml/xml.js"></script>
+<link rel="stylesheet" href="cm/theme/mdn-like.css">
+<link rel="stylesheet" href="cm/theme/dracula.css">
+<script src="https://unpkg.com/codeflask/build/codeflask.min.js"></script>
+<style type="text/css">
+	.CodeMirror {
+		border: 1px solid #eee;
+		height: auto;
+		font-family: 'PT Mono';
+		font-size:0.8rem;
+	}
+
+	.code-section {
+		display: flex;
+		flex-direction: row;
+		margin-top: 10px;
+		/**border:1px solid #c0c0c0**/
+	}
+
+	.code-section-editor {
+		border: 1px solid #d9d9d9;
+		margin: 0px;
+		flex-basis: 50%
+	}
+
+	.code-section-extra-panel {
+		border: 1px solid #d9d9d9;
+		margin-left: -4px;
+		flex-basis: 50%;
+		border-left:1px solid #c0c0c0;
+		/*background-color: #282a36 !important*/
+	}
+	.tests-panel{
+		display:flex;
+		margin-left:5px;
+		flex-direction:row;
+	}
+	.tests-panel-lbl{
+		flex-basis: 15%
+	}
+	.tests-panel-input{
+		flex-basis: 85%
+	}
+</style>
+
+<body class="cm-fat-cursor">
+	<div class="container" id="container">
+		<div class="code-section">
+			<div class="code-section-editor" id="code-section-editor1">
+
+			</div>
+			<div class="code-section-extra-panel" id="code-section-extra-panel-1">
+				<div class="tests-panel" contenteditable="">
+				</div>
+			</div>
+		</div>
+		<div class="code-section">
+			<div class="code-section-editor" id="code-section-editor2">
+
+			</div>
+			<div class="code-section-extra-panel" id="code-section-extra-panel-2">
+
+			</div>
+		</div>
+	</div>
+	<script>
+		function createEditor(dom) {
+			const rulers = [{ color: "#fcc", column: 70, lineStyle: "dashed" }];
+			const editor = CodeMirror(dom, {
+				lineNumbers: true,
+				lineWrapping: true,
+				mode: "zha",
+				viewportMargin: Infinity,
+				matchBrackets: true,
+				styleActiveLine: true,
+				cursorBlinkRate: 0,
+				rulers: rulers,
+				//theme: "dracula"
+			});
+			editor.refresh();
+			editor.getDoc().setValue("calculus a b x y = [\n ax = mul a x \n by = mul b y \n add ax by\n]\n");
+			return editor;
+		}
+		createEditor(document.querySelector("#code-section-editor1"));
+		createEditor(document.querySelector("#code-section-editor2"));
+	</script>
+</body>
+
+</html>

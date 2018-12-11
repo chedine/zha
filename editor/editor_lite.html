@@ -1,0 +1,64 @@
+<!doctype html>
+
+<title>Zha Editor</title>
+<meta charset="utf-8" />
+
+<script src="https://cdn.jsdelivr.net/npm/nano-editor@1.2.3/dist/nanoEditor.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.9.0/themes/prism.min.css" />
+<style type="text/css">
+	.tests-panel {
+		display: flex;
+		margin-left: 5px;
+		flex-direction: row;
+	}
+
+	.tests-panel-lbl {
+		flex-basis: 15%
+	}
+
+	.tests-panel-input {
+		flex-basis: 85%
+	}
+
+</style>
+
+<body class="cm-fat-cursor">
+	<div class="container" id="container">
+		<div class="code-section">
+			<div class="code-section-editor" id="code-section-editor1">
+
+			</div>
+			<div class="code-section-extra-panel" id="code-section-extra-panel-1">
+				<div class="tests-panel" contenteditable="">
+				</div>
+			</div>
+		</div>
+		<div class="code-section">
+			<div class="code-section-editor" id="code-section-editor2">
+
+			</div>
+			<div class="code-section-extra-panel" id="code-section-extra-panel-2">
+
+			</div>
+		</div>
+	</div>
+	<code contenteditable="true">
+		calculus a b x y = [
+			ax = * a x
+		]
+	</code>
+	<script>
+		function createEditor(dom) {
+			const editor = new nanoEditor(dom, "javascript", true);
+			editor.setValue("calculus a b x y = [\n ax = mul a x \n by = mul b y \n add ax by\n]\n");
+		}
+		//createEditor("#code-section-editor1");
+		//createEditor("#code-section-editor2");
+		//createEditor("#sample");
+
+	
+
+	</script>
+</body>
+
+</html>
