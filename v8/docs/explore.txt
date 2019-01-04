@@ -1,0 +1,30 @@
+{
+    :source "lib/util/file.zha" | Console
+    :pos    {line: 35, char:2}
+    :token  ZhaType
+}
+
+{
+    :source "lib/util/file.zha" | Console
+    :pos    {line: 35, char:2}
+    :token  ZhaType
+}
+
+--
+
+a = 5
+eq a b = [
+    ax = * a 5
+    by = * b 6
+    + ax by
+]
+
+list1 = (12 3 5)
+firstList = first list1
+------
+
+Zha
+    - read
+        - 
+    - eval
+    - print

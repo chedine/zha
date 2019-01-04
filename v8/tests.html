@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Zha Reader Tests</title>
+    <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.7.1.css">
+</head>
+
+<body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="types.js"></script>
+    <script src="env.js"></script>
+    <script src="reader.js"></script>
+    <script src="eval.js"></script>
+    <script src="comp.js"></script>
+    <script src="zha.js"></script>
+    <script src="https://code.jquery.com/qunit/qunit-2.7.1.js"></script>
+    <script src="test/reader_spec.js"></script>
+    <script src="test/types_spec.js"></script>
+    <script src="test/env_spec.js"></script>
+    <script src="test/eval_spec.js"></script>
+    <script>
+        function addTestSuite(suite){
+           for(var i=0;i<=suite.length-2;i=i+2){
+                QUnit.test(suite[i], suite[i+1]);                
+            }
+        }
+        QUnit.module( "Reader" );
+        addTestSuite(ReaderSpec);
+        QUnit.module( "Types" );
+        addTestSuite(TypeSpec);
+        QUnit.module( "ENV" );
+        addTestSuite(EnvSpec);
+        QUnit.module( "EVAL" );
+        addTestSuite(EvalSpec);
+    </script>
+</body>
+
+</html>
