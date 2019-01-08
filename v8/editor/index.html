@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<title>Zha Editor</title>
+<meta charset="utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Oxygen+Mono" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Space+Mono" rel="stylesheet"/>
+<style type="text/css">
+    #console {
+        position: absolute;
+        width: 99%;
+        height: 95%;
+        background-color: black;
+    }
+
+    /* The inner console element. */
+
+    .jqconsole {
+        padding: 10px;
+        font-family: 'Oxygen Mono', 'Space Mono', monospace;
+        font-size: 16px;
+    }
+
+    /* The cursor. */
+
+    .jqconsole-cursor {
+        background-color: gray;
+    }
+
+    /* The cursor color when the console looses focus. */
+
+    .jqconsole-blurred .jqconsole-cursor {
+        background-color: #666;
+    }
+
+    /* The current prompt text color */
+
+    .jqconsole-prompt {
+        color: white;
+    }
+
+    /* The command history */
+
+    .jqconsole-old-prompt {
+        color: white;
+        font-weight: normal;
+    }
+
+    /* The text color when in input mode. */
+
+    .jqconsole-input {
+        color: #dd0;
+    }
+
+    /* Previously entered input. */
+
+    .jqconsole-old-input {
+        color: #bb0;
+        font-weight: normal;
+    }
+
+    /* The text color of the output. */
+
+    .jqconsole-output {
+        color: #dd5;
+        font-weight: 600;
+    }
+
+    .jqconsole-error {
+        color: red;
+        font-weight: 700;
+    }
+</style>
+<div id="console"></div>
+<script>if(typeof module === 'object') {window.module = module; module = undefined} </script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="term/jqconsole.js" type="text/javascript" charset="utf-8"></script>
+<script>if(window.module) module = window.module;</script>
+<script src="../types.js"></script>
+<script src="../env.js"></script>
+<script src="../reader.js"></script>
+<script src="../eval.js"></script>
+<script src="../comp.js"></script>
+<script src="../zha.js"></script>>
+<script>
+    var holders = 0;
+    $(function () {
+        var jqconsole = $('#console').jqconsole('Hi\n', 'Zha/User>>> ');
+        var startPrompt = function () {
+            // Start the prompt with history enabled.
+            jqconsole.Prompt(true, function (input) {
+                // Output input with the class jqconsole-output.
+                try {
+                    var result = Zha.eval(input.trim())[0];
+                    jqconsole.Write(prettyPrint(result) + '\n', 'jqconsole-output', false);
+                }
+                catch (err) {
+                    jqconsole.Write(err + '\n', 'jqconsole-error', false);
+                }
+                // Restart the prompt.
+                startPrompt();
+            }, isABalancedZhaExpr);
+        };
+        startPrompt();
+    });
+    function updater(holder){
+        return function(re){
+            document.getElementById(holder).innerHTML = prettyPrint(re);
+        }
+    }
+    function prettyPrint(zhaVal) {
+        //	  console.log(zhaVal.value);
+        //return JSON.stringify(zhaVal.value);
+        if (zhaVal === undefined || zhaVal === null) {
+            return "Nil";
+        }
+        if (Zha.ts.isSeq(zhaVal)) {
+            var r = zhaVal.value; //mori.toJs(zhaVal.value);
+            var output = '[ ';
+            for (var i = 0; i < r.length; i++) {
+                output += (prettyPrint(r[i]) + ' ')
+            }
+            output += ']';
+            return output;
+        }
+        else if (Zha.ts.isFn(zhaVal)) {
+            return "F()";
+        }
+        else if(zhaVal instanceof Promise){
+            var id = holders;
+            var results = `<span id="holder_${id}">Promise Waiting</span>`;
+            holders ++;
+            zhaVal.then(updater('holder_'+id));
+            return results;
+        }
+        else {
+            return zhaVal.value;
+        }
+        //return zhaVal !==undefined ? zhaVal.value : "Nil";
+    }
+    function isABalancedZhaExpr() {
+        return false;
+    }
+
+   // Zha.eval(ZhaFns);
+</script>
+
+<body>
+</body>
+
+</html>

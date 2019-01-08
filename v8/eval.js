@@ -2,7 +2,7 @@ var ZEVAL = ZEVAL || {};
 ; (function (_eval, undefined) {
 
     const SPL_OPS = {
-        "fn": true, "#": true, "def": true, "if": true, "loop": true
+        "fn": true, "#": true, "def": true, "if": true, "loop": true, "~" : true
     }
     const SPL_SYM = {
         "stateVar": new Zha.Symbol("$state"),
@@ -98,6 +98,9 @@ var ZEVAL = ZEVAL || {};
             }
             return state;
         }
+		else if(head.value === "~"){
+			return listForm.get(1);// listForm.rest();
+		}
        /** else if(head.value ===  "#") {
             const rest = listForm.rest();
             return evalDirective(rest, env);

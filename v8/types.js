@@ -333,6 +333,7 @@ var Zha = Zha || {};
 	zha.ts.isFn = (z) => z.type && z.type().equals(FN);
 	zha.ts.isList = (z) => z.type().equals(LIST);
 	zha.ts.isVec = (z) => z.type().equals(VEC);
+	zha.ts.isSeq = (z) => zha.ts.isList(z) || zha.ts.isVec(z);
 	zha.ts.isString = (z) => z.type().equals(STRING);
 	zha.ts.isKeyword = (z) => z.type && z.type().equals(KEYWORD);
 	zha.ts.isSymbol = (z) => z.type().equals(SYM);
