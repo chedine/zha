@@ -9,6 +9,9 @@ var Zha = Zha || {};
 		value() {
 			return this.value;
 		}
+		eq(other) {
+			return new zha.Boolean(this.value === other.value);
+		}
 	}
 	//Number Type
 	zha.Number = class extends Val {
@@ -34,8 +37,38 @@ var Zha = Zha || {};
 		pow(n) {
 			return new zha.Number(Math.pow(this.value + n.value));
 		}
+		inc(n){
+			return new Zha.Number(this.value + 1);
+		}
+		dec(n){
+			return new Zha.Number(this.value - 1);
+		}
+		gt(n){
+			return new Zha.Boolean(this.value > n.value);
+		}
+		lt(n){
+			return new Zha.Boolean(this.value < n.value);
+		}
+		gtEq(n){
+			return new Zha.Boolean(this.value >= n.value);
+		}
+		ltEq(n){
+			return new Zha.Boolean(this.value <= n.value);
+		}
 		type() {
 			return new zha.Keyword(":Number");
+		}
+	}
+	zha.ZhaReturn = class extends Val {
+		constructor(val){
+			super(val)
+			this.meta = {type: -1};
+		}
+		hasValue(){
+			return this.value !== undefined;
+		}
+		type() {
+			return new zha.Keyword(":Return");
 		}
 	}
 	// String Type
@@ -81,6 +114,30 @@ var Zha = Zha || {};
 		type() {
 			return new zha.Keyword(":String");
 		}
+		toUpperCase(){
+			return new zha.String(this.value.toUpperCase());
+		}
+		toLowerCase(){
+			return new zha.String(this.value.toLower());
+		}
+		substring(index){
+			return new zha.String(this.value.substring(index.value));
+		}
+		first(index){
+			return new zha.String(this.value.substring(0,1));
+		}
+		second(index){
+			return new zha.String(this.value.substring(1,1));
+		}
+		third(index){
+			return new zha.String(this.value.substring(2,1));
+		}
+		rest(index){
+			return new zha.String(this.value.substring(1,this.value.length));
+		}
+		last(index){
+			return new zha.String(this.value.substring(this.value.length-1));
+		}
 	}
 	//Boolean type
 	zha.Boolean = class extends Val {
@@ -97,6 +154,7 @@ var Zha = Zha || {};
 		not(other) {
 			return new ZhaBoolean(!this.value);
 		}
+		
 		type() {
 			return new Zha.Keyword(":Boolean");
 		}
@@ -305,13 +363,18 @@ var Zha = Zha || {};
 	const HMAP = new zha.Keyword(":HMap");
 	const COMPONENT = new zha.Keyword(":Comp");
 	const NIL = new zha.Keyword(":Nil");
+	const RETURN = new zha.Keyword(":Return");
 
 	zha.ts.typeIfy = function (rawTxt) {
 		if (rawTxt === "true" || rawTxt === true) {
 			return new zha.Boolean(true);
 		} else if (rawTxt === "false" || rawTxt === false) {
 			return new zha.Boolean(false);
-		} else if (!isNaN(parseFloat(rawTxt))) {
+		}
+		/**else if (rawTxt === "break" || rawTxt === "breakw") {
+			return new zha.Keyword(rawTxt);
+		}**/
+		else if (!isNaN(parseFloat(rawTxt))) {
 			return new zha.Number(parseFloat(rawTxt));
 		} else if (rawTxt.startsWith('"') && rawTxt.endsWith('"')) {
 			//Remove quotes
@@ -340,6 +403,7 @@ var Zha = Zha || {};
 	zha.ts.isSymbol = (z) => z.type().equals(SYM);
 	zha.ts.isComponent = (z) => z.type().equals(COMPONENT);
 	zha.ts.isNil = (z) => z.type().equals(NIL);
+	zha.ts.isReturn = (z) => z.type().equals(RETURN);
 	zha.ts.Nil = new zha.Nil();
 
 })(window.Zha = window.Zha || {});

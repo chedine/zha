@@ -2,7 +2,7 @@ var ZEVAL = ZEVAL || {};
 ; (function (_eval, undefined) {
 
     const SPL_OPS = {
-        "fn": true, "#": true, "def": true, "if": true, "loop": true, "~" : true
+        "fn": true, "#": true, "def": true, "if": true, "loop": true, "~" : true, "return":true
     }
     const SPL_SYM = {
         "stateVar": new Zha.Symbol("$state"),
@@ -83,26 +83,31 @@ var ZEVAL = ZEVAL || {};
         }
         else if (head.value === "loop") {
             const iterable = evalAST(listForm.get(1), env);
-            const loopingOpts = listForm.count().value > 3 ? listForm.get(2) : {};
-            const loopBody = listForm.count().value > 3 ? listForm.get(3) : listForm.get(2);
+          //  const loopingOpts = listForm.count().value > 3 ? listForm.get(2) : {};
+          //  const loopBody = listForm.count().value > 3 ? listForm.get(3) : listForm.get(2);
+			const loopBody = listForm.get(2);
             const start = 0;
             const end = iterable.count().value;
             const incrementor = 1;
             const loopEnv = new Zha.Env({}, env);
-            var state = new Zha.Vec(); // mutable reference
+            var state = listForm.count().value > 3 ? evalAST(listForm.get(3),env) : new Zha.Vec(); // mutable reference
             for (var i = start; i < end; i = i + incrementor) {
                 loopEnv.define(SPL_SYM.stateVar, state);
                 loopEnv.define(SPL_SYM.idVar, new Zha.Number(i));
                 loopEnv.define(SPL_SYM.valVar, iterable.get(i));
                 state = evalAST(loopBody, loopEnv);
-                if(state === Zha.ts.isNil()){
-                    return state; // used to break out of the loop. TODO: Anything better ?
+                if(Zha.ts.isReturn(state)){
+                    return state.hasValue() ? state.value : Zha.ts.Nil; // used to break out of the loop. TODO: Anything better ?
                 }
             }
             return state;
         }
 		else if(head.value === "~"){
 			return listForm.get(1);// listForm.rest();
+		}
+		else if(head.value === "return"){
+			const returnVal = listForm.value.length > 1 ? evalAST(listForm.get(1), env) : undefined;
+			return new Zha.ZhaReturn(returnVal);
 		}
        /** else if(head.value ===  "#") {
             const rest = listForm.rest();
