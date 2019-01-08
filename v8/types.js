@@ -304,6 +304,7 @@ var Zha = Zha || {};
 	const KEYWORD = new zha.Keyword(":Keyword");
 	const HMAP = new zha.Keyword(":HMap");
 	const COMPONENT = new zha.Keyword(":Comp");
+	const NIL = new zha.Keyword(":Nil");
 
 	zha.ts.typeIfy = function (rawTxt) {
 		if (rawTxt === "true" || rawTxt === true) {
@@ -338,6 +339,7 @@ var Zha = Zha || {};
 	zha.ts.isKeyword = (z) => z.type && z.type().equals(KEYWORD);
 	zha.ts.isSymbol = (z) => z.type().equals(SYM);
 	zha.ts.isComponent = (z) => z.type().equals(COMPONENT);
+	zha.ts.isNil = (z) => z.type().equals(NIL);
 	zha.ts.Nil = new zha.Nil();
 
 })(window.Zha = window.Zha || {});

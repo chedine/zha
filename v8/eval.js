@@ -95,6 +95,9 @@ var ZEVAL = ZEVAL || {};
                 loopEnv.define(SPL_SYM.idVar, new Zha.Number(i));
                 loopEnv.define(SPL_SYM.valVar, iterable.get(i));
                 state = evalAST(loopBody, loopEnv);
+                if(state === Zha.ts.isNil()){
+                    return state; // used to break out of the loop. TODO: Anything better ?
+                }
             }
             return state;
         }
