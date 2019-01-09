@@ -24,12 +24,11 @@ const corefns = `
         ]
     ]
 	
-	reduce list reducer seed = [
+	reduce list f seed = [
 		loop list [
-			reducer $state $val
+			f $state $val
 		] seed
 	]
-	
 	even? n = eq (% n 2) 0
 	odd?  n = eq (% n 2) 1
 	type val    = js/call val "type"

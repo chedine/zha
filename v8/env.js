@@ -44,7 +44,13 @@ const bindings = {
 	"vec" : (...args) => new Zha.Vec(args),
     "conj" : (seq, val) => seq.conj(val),
     "hashmap" : (...nvp) => new Zha.HMap(nvp),
-	"toJs": (zha) => zha.toNative(),
+    "toJs": (zha) => zha.toNative(),
+    "apply": new Zha.Fn((args, env) => {
+        const fn = args[0];
+        const argArray = args[1].value;
+      //  const args1 = Array.isArray(argArray) ? argArray : [argArray];
+        return fn.invoke(argArray);
+    }),
     "js/new": (type, ...args) => {
         let str = `new ${type.value}`;
             if (args) {
