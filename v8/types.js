@@ -12,6 +12,10 @@ var Zha = Zha || {};
 		eq(other) {
 			return new zha.Boolean(this.value === other.value);
 		}
+
+		toNative(){
+			return this.value;	
+		}
 	}
 	//Number Type
 	zha.Number = class extends Val {
@@ -324,6 +328,7 @@ var Zha = Zha || {};
 		}
 		set(k,v){
 			//TODO: Return a new Map
+			obj[k.value] = v;
 		}
 		count(){
 			return new zha.Number(Object.keys(this.value).length);
@@ -405,5 +410,6 @@ var Zha = Zha || {};
 	zha.ts.isNil = (z) => z.type().equals(NIL);
 	zha.ts.isReturn = (z) => z.type().equals(RETURN);
 	zha.ts.Nil = new zha.Nil();
+	zha.ts.isZhaType = (z) => z !== undefined && z!== null && z.type ; //TODO: InstanceOf perhaps ?? 
 
 })(window.Zha = window.Zha || {});

@@ -66,10 +66,23 @@ const bindings = {
             }
             return (eval(str));
     },
-    "js/call": (obj, methodName, ...args) => obj[methodName.value].apply(obj, args),
+    "js/call": (obj, methodName, ...args) => {
+        const jsCompatibleArgs = [];
+        for(var i=0;i<args.length;i++){
+            if(Zha.ts.isZhaType(args[i])){
+                jsCompatibleArgs.push(args[i].toNative());
+            }
+            else{
+                jsCompatibleArgs.push(args[i]);
+            }
+        }
+        return obj[methodName.value].apply(obj, jsCompatibleArgs)
+    },
     "js/prop": (obj, prop) => obj[prop.value],
     "js/prop!": (obj, prop, val) => { obj[prop] = val; return obj },
-    "js/eval": (str) => (eval(str))
+    "js/eval": (str) => (eval(str)),
+    "h/doc" : () => document,
+    "h/win" : () => window
 }
 
 Zha.RT = new Zha.Env(bindings, undefined);

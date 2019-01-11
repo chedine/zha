@@ -69,7 +69,8 @@ const corefns = `
 	get seq index = js/call seq "get" index
 	conj seq el   = js/call seq "conj" el
 	concat seq seq2 = js/call seq "concat" seq2
-	assoc seq i val = js/call seq "assoc" i val
+    assoc seq i val = js/call seq "assoc" i val
+    h/el sel = js/call (h/doc) "querySelector" sel
 `
 
 Zha.eval(corefns);
