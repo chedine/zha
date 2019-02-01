@@ -76,7 +76,7 @@ const bindings = {
                 jsCompatibleArgs.push(args[i]);
             }
         }
-        return obj[methodName.value].apply(obj, jsCompatibleArgs)
+        return obj[methodName.value].apply(obj, jsCompatibleArgs);
     },
     "js/prop": (obj, prop) => obj[prop.value],
     "js/prop!": (obj, prop, val) => { obj[prop] = val; return obj },

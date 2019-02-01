@@ -40,7 +40,7 @@ var Reader = Reader || {};
                         token = reader.peek();
                     }
                     if (implicitListForm.length > 1) {
-                        const expanded = new Zha.List(expandReaderMacros(implicitListForm));
+                        const expanded = [].concat(expandReaderMacros(implicitListForm));
                         allForms.push(expanded);
                     }
                     else if(implicitListForm.length >0){
@@ -54,7 +54,7 @@ var Reader = Reader || {};
             }
             token = reader.peek();
         }
-        return new Zha.List(allForms);
+        return allForms; //new Array(allForms);
     }
     /**
      * Given a statefule Reader, We go through until the Reader is exhausted.
@@ -100,7 +100,7 @@ var Reader = Reader || {};
         } else {
             throw new Error("Malformed List ");
         }
-        return new Zha.List(expandReaderMacros(ast));
+        return [].concat(expandReaderMacros(ast));
     }
 
     function readMap(reader) {
@@ -120,7 +120,7 @@ var Reader = Reader || {};
             throw new Error("Malformed Map ");
         }
         var mapAST = [new Zha.Symbol("hashmap"), ...(expandReaderMacros(ast))];
-        return new Zha.List(mapAST);
+        return new Array(mapAST);
     }
     function readBlock(reader) {
         reader.next();// beginning of list block. consume
@@ -131,7 +131,7 @@ var Reader = Reader || {};
             const form = readForm(reader);
             if (form === '\n') {
                 if (currentLineAsAST.length > 0) {
-                    const expanded = new Zha.List(expandReaderMacros(currentLineAsAST));
+                    const expanded = new Array(expandReaderMacros(currentLineAsAST));
                     ast.push(expanded);
                     currentLineAsAST = [];
                 }
@@ -144,7 +144,7 @@ var Reader = Reader || {};
             if (currentLineAsAST.length > 0) {
                 const expanded = expandReaderMacros(currentLineAsAST);
                 if (ast.length > 0) {
-                    ast.push(new Zha.List(expanded));
+                    ast.push(new Array(expanded));
                 }
                 else {
                     ast = ast.concat(expanded)
@@ -176,7 +176,7 @@ var Reader = Reader || {};
         if (params.length === 0) {
             let body = [def].concat(beforeAssignment);
             if (afterAssignment.length > 1 || Array.isArray(afterAssignment[0])) {
-                body.push(new Zha.List(afterAssignment));
+                body.push(new Array(afterAssignment));
             } else {
                 body = body.concat(afterAssignment);
             }
@@ -185,15 +185,15 @@ var Reader = Reader || {};
             const fnName = beforeAssignment.slice(0, 1);
             const fnBody = [];
             fnBody.push(new Zha.Symbol("fn"));
-            fnBody.push(new Zha.List(params));
+            fnBody.push([].concat(params));
             var fnExpr;
             if(Zha.ts.isList(afterAssignment[0]) || Zha.ts.isVec(afterAssignment[0])){
                 fnExpr = afterAssignment[0];
             }else{
-                fnExpr = new Zha.List(afterAssignment);
+                fnExpr = (afterAssignment);
             }
             fnBody.push(fnExpr);
-            return [def].concat(fnName).concat(new Zha.List(fnBody));
+            return [def].concat(fnName).concat(new Array(fnBody));
         }
     }
 
