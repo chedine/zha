@@ -131,7 +131,7 @@ var Reader = Reader || {};
             const form = readForm(reader);
             if (form === '\n') {
                 if (currentLineAsAST.length > 0) {
-                    const expanded = new Array(expandReaderMacros(currentLineAsAST));
+                    const expanded = (expandReaderMacros(currentLineAsAST));
                     ast.push(expanded);
                     currentLineAsAST = [];
                 }
@@ -144,7 +144,7 @@ var Reader = Reader || {};
             if (currentLineAsAST.length > 0) {
                 const expanded = expandReaderMacros(currentLineAsAST);
                 if (ast.length > 0) {
-                    ast.push(new Array(expanded));
+                    ast.push((expanded));
                 }
                 else {
                     ast = ast.concat(expanded)
@@ -176,7 +176,7 @@ var Reader = Reader || {};
         if (params.length === 0) {
             let body = [def].concat(beforeAssignment);
             if (afterAssignment.length > 1 || Array.isArray(afterAssignment[0])) {
-                body.push(new Array(afterAssignment));
+                body.push(afterAssignment);
             } else {
                 body = body.concat(afterAssignment);
             }

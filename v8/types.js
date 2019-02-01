@@ -183,6 +183,12 @@ var Zha = Zha || {};
 	zha.Vec.prototype.valueOf = function () {
 		return this.value;
 	}
+	zha.Vec.prototype.last = function(){
+		return this.value[this.value.length-1];
+	}
+	zha.Vec.prototype.length = function(){
+		return this.value.length;
+	}
 
 	zha.Fn = class extends Val {
 		//For now Vec behaves the same as List as Native Array type.

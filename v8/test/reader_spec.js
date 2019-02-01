@@ -155,7 +155,7 @@ ReaderSpec = function () {
 
         const fnBody = fn.get(2);
         const bindings = fnBody.last();
-        assert.equal(fnBody.length, 3, "Body is a block having 3 lists");
+        assert.equal(fnBody.length(), 3, "Body is a block having 3 lists");
         //assert.equal(bindings.first().value, "def", "Body is a block having 3 lists");
         assert.equal(bindings.length, 3, "Binding is a list of 3");
     }
