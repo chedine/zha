@@ -72,10 +72,10 @@ EvalSpec = function () {
     function simpleConditionalTest(assert) {
         var code = 'if true "this is true" "this is false"';
         var ast = read(code);
-        assert.equal(eval(ast.first()).value , "this is true", "Must be true");
+        assert.equal(eval(ast.first()) , "this is true", "Must be true");
         code = 'if false "this is true" "this is false"';
         ast = read(code);
-        assert.equal(eval(ast.first()).value , "this is false", "Must be false");
+        assert.equal(eval(ast.first()) , "this is false", "Must be false");
 
         code = 'if false "this is true"';
         var ast = read(code);
@@ -106,7 +106,7 @@ EvalSpec = function () {
         eval(ast.first());
         eval(ast.second());
         var result = eval(ast.get(2));
-        assert.equal(result.value[0].value , 2, "Must be 2");
+        assert.equal(result[0] , 2, "Must be 2");
     }
     function hmapTest(assert){
         var code = `
@@ -143,14 +143,14 @@ EvalSpec = function () {
     }
     return [
         "Atoms eval to itself", simpleEvalTests,
-        "List forms are treated as fn applications" , simpleListForms,
+         "List forms are treated as fn applications" , simpleListForms,
         "def form defines a binding in current env" , defFormTests,
         "def fn defines a new function" , fnTests,
         "new function" , fnTests1,
         "if/else tests", simpleConditionalTest,
         "simple block tests", simpleBlockTest,
        "Simple Looping construct tests", simpleLoopTest,
-       "HashMap tests", hmapTest,
-       "playground" , playground
+       /**"HashMap tests", hmapTest,
+       "playground" , playground**/
     ];
 }();

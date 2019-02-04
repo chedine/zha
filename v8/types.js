@@ -135,6 +135,12 @@ var Zha = Zha || {};
 		type() {
 			return new Zha.Keyword(":Nil");
 		}
+		valueOf(){
+			return null;
+		}
+	}
+	zha.Nil.prototype.valueOf = function(){
+		return null;
 	}
 	// Keyword
 	zha.Keyword = class extends Val {
@@ -170,6 +176,9 @@ var Zha = Zha || {};
 	}
 	Array.prototype.last = function(){
 		return this[this.length-1];
+	}
+	Array.prototype.conj = function(v){
+		return this.concat(v);
 	}
 	// ------ Vec 
 	zha.Vec = function (val) {
@@ -240,15 +249,6 @@ var Zha = Zha || {};
 			return new zha.Keyword(":HMap");
 		}
 	}
-	zha.Component = class extends zha.HMap {
-		constructor(val) {
-			super(val);
-			this._meta = { type: 10 };
-		}
-		type() {
-			return new zha.Keyword(":Comp");
-		}
-	}
 	// Type utils
 	zha.ts = zha.ts || {};
 	const NUMBER = new zha.Keyword(":Number");
@@ -294,15 +294,14 @@ var Zha = Zha || {};
 	zha.ts.isNumber = (z) => z.type().equals(NUMBER);
 	zha.ts.isBool = (z) => z.type().equals(BOOLEAN);
 	zha.ts.isFn = (z) => z.type && z.type().equals(FN);
-	zha.ts.isList = (z) => Array.isArray();
-	zha.ts.isVec = (z) => z.type().equals(VEC);
+	zha.ts.isList = (z) => Array.isArray(z);
+	zha.ts.isVec = (z) => z.type && z.type().equals(VEC);
 	zha.ts.isSeq = (z) => zha.ts.isList(z) || zha.ts.isVec(z);
-	zha.ts.isString = (z) => z.type().equals(STRING);
+	zha.ts.isString = (z) => z.type && z.type().equals(STRING);
 	zha.ts.isKeyword = (z) => z.type && z.type().equals(KEYWORD);
-	zha.ts.isSymbol = (z) => z.type().equals(SYM);
-	zha.ts.isComponent = (z) => z.type().equals(COMPONENT);
-	zha.ts.isNil = (z) => z.type().equals(NIL);
-	zha.ts.isReturn = (z) => z.type().equals(RETURN);
+	zha.ts.isSymbol = (z) => z.type && z.type().equals(SYM);
+	zha.ts.isNil = (z) => z.type && z.type().equals(NIL);
+	zha.ts.isReturn = (z) => z.type && z.type().equals(RETURN);
 	zha.ts.Nil = new zha.Nil();
 	zha.ts.isZhaType = (z) => z !== undefined && z !== null && z.type; //TODO: InstanceOf perhaps ?? 
 

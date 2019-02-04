@@ -4,7 +4,7 @@ var Zha = Zha || {};
     zha.eval = function(codeStr, runtime){
         const ast = zha.read(codeStr);
         const results = [];
-        for(var i=0;i<ast.count().value;i++){
+        for(var i=0;i<ast.length;i++){
             results.push(zha.Eval.eval(ast.get(i), runtime));
         }
         return results;

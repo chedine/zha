@@ -77,7 +77,7 @@ var ZEVAL = ZEVAL || {};
             if (condResult.value) {
                 return evalAST(listForm.get(2), env);
             }
-            return listForm.count().value > 3 ?
+            return listForm.length > 3 ?
                 evalAST(listForm.get(3), env)
                 : Zha.ts.Nil;
         }
@@ -87,17 +87,17 @@ var ZEVAL = ZEVAL || {};
           //  const loopBody = listForm.count().value > 3 ? listForm.get(3) : listForm.get(2);
 			const loopBody = listForm.get(2);
             const start = 0;
-            const end = iterable.count().value;
+            const end = iterable.length;
             const incrementor = 1;
             const loopEnv = new Zha.Env({}, env);
-            var state = listForm.count().value > 3 ? evalAST(listForm.get(3),env) : new Zha.Vec(); // mutable reference
+            var state = listForm.length > 3 ? evalAST(listForm.get(3),env) : new Array(); // mutable reference
             for (var i = start; i < end; i = i + incrementor) {
                 loopEnv.define(SPL_SYM.stateVar, state);
                 loopEnv.define(SPL_SYM.idVar, new Zha.Number(i));
                 loopEnv.define(SPL_SYM.valVar, iterable.get(i));
                 state = evalAST(loopBody, loopEnv);
                 if(Zha.ts.isReturn(state)){
-                    return state.hasValue() ? state.value : Zha.ts.Nil; // used to break out of the loop. TODO: Anything better ?
+                    return state.hasValue() ? state : Zha.ts.Nil; // used to break out of the loop. TODO: Anything better ?
                 }
             }
             return state;
@@ -106,7 +106,7 @@ var ZEVAL = ZEVAL || {};
 			return listForm.get(1);// listForm.rest();
 		}
 		else if(head.value === "return"){
-			const returnVal = listForm.value.length > 1 ? evalAST(listForm.get(1), env) : undefined;
+			const returnVal = listForm.length > 1 ? evalAST(listForm.get(1), env) : undefined;
 			return new Zha.ZhaReturn(returnVal);
 		}
        /** else if(head.value ===  "#") {
@@ -129,15 +129,15 @@ var ZEVAL = ZEVAL || {};
         throw new Error("Unsupported directive " + listForm.get(0).value);
     }
     function expandOperands(operandsList, env) {
-        const expandedOperands = [];
-        for (var i = 0; i < operandsList.value.length; i++) {
+        const expandedOperands = new Array();
+        for (var i = 0; i < operandsList.length; i++) {
             expandedOperands.push(evalAST(operandsList.get(i), env));
         }
-        return new Zha.List(expandedOperands);
+        return (expandedOperands);
     }
     function invoke(fnLike, args) {
         if (Zha.ts.isFn(fnLike)) {
-            return fnLike.invoke(args.value);
+            return fnLike.invoke(args);
         }
         else if(Zha.ts.isKeyword(fnLike)){
             const target = args.first();
@@ -151,7 +151,7 @@ var ZEVAL = ZEVAL || {};
         }
         else {
             //Assuming its a native fn call
-            return fnLike.apply(undefined, args.value);
+            return fnLike.apply(undefined, args);
         }
     }
     
