@@ -1,0 +1,18 @@
+doc = js/document  // var doc = document;
+
+t = new js/MyType  // var t = new MyType();
+
+t = new js/MyType 1 2  // var t = new MyType(1,2);
+
+.alert js/window "hello" // window.alert("hello");
+
+t = new js/MyType "dinesh" // var t = new MyType("dinesh");
+n = .getName t             // var n = t.getName();
+
+nameOfPerson = .-name t // var nameOfPerson = t.name;
+
+nameOfEmployer = .. t -employer -name // var nameOfEmployer = t.employer.name;
+
+js/set! t -name "Harish" // t.name = "harish";
+js/set! t -employer -name "Git" // t.employer.name = "Git"
+
