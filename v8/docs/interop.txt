@@ -16,3 +16,12 @@ nameOfEmployer = .. t -employer -name // var nameOfEmployer = t.employer.name;
 js/set! t -name "Harish" // t.name = "harish";
 js/set! t -employer -name "Git" // t.employer.name = "Git"
 
+--------
+
+`document
+new `Mytype
+new `Mytype 1 2
+jc! `window.alert "hello"
+jp! n value
+jpset! n value 10
+

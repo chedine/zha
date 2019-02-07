@@ -22,20 +22,23 @@
     <script src="test/types_spec.js"></script>
     <script src="test/env_spec.js"></script>
     <script src="test/eval_spec.js"></script>
+    <script src="test/interop_spec.js"></script>
     <script>
-        function addTestSuite(suite){
-           for(var i=0;i<=suite.length-2;i=i+2){
-                QUnit.test(suite[i], suite[i+1]);                
+        function addTestSuite(suite) {
+            for (var i = 0; i <= suite.length - 2; i = i + 2) {
+                QUnit.test(suite[i], suite[i + 1]);
             }
         }
-        QUnit.module( "Reader" );
+        QUnit.module("Reader");
         addTestSuite(ReaderSpec);
-        QUnit.module( "Types" );
+        QUnit.module("Types");
         addTestSuite(TypeSpec);
-        QUnit.module( "ENV" );
+        QUnit.module("ENV");
         addTestSuite(EnvSpec);
-        QUnit.module( "EVAL" );
+        QUnit.module("EVAL");
         addTestSuite(EvalSpec);
+        /** QUnit.module("Interop");
+         addTestSuite(InteropSpec);**/
     </script>
 </body>
 

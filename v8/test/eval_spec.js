@@ -150,7 +150,7 @@ EvalSpec = function () {
         "if/else tests", simpleConditionalTest,
         "simple block tests", simpleBlockTest,
        "Simple Looping construct tests", simpleLoopTest,
-       /**"HashMap tests", hmapTest,
-       "playground" , playground**/
+       "HashMap tests", hmapTest,
+       /**"playground" , playground**/
     ];
 }();

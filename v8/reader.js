@@ -120,7 +120,7 @@ var Reader = Reader || {};
             throw new Error("Malformed Map ");
         }
         var mapAST = [new Zha.Symbol("hashmap"), ...(expandReaderMacros(ast))];
-        return new Array(mapAST);
+        return (mapAST);
     }
     function readBlock(reader) {
         reader.next();// beginning of list block. consume
@@ -154,7 +154,7 @@ var Reader = Reader || {};
         } else {
             throw new Error("Malformed List block ");
         }
-        return new Zha.Vec(ast);
+        return new Zha.Block(ast);
     }
 
     function expandReaderMacros(listForm) {
@@ -170,12 +170,12 @@ var Reader = Reader || {};
 
     function expandAssignment(list, pos) {
         const beforeAssignment = list.slice(0, pos);
-        const afterAssignment = list.slice(pos + 1, list.length);
+        const afterAssignment = Array.isArray(list[pos+1])? list[pos+1]: list.slice(pos + 1, list.length);
         const params = beforeAssignment.slice(1);
         const def = new Zha.Symbol("def");
         if (params.length === 0) {
             let body = [def].concat(beforeAssignment);
-            if (afterAssignment.length > 1 || Array.isArray(afterAssignment[0])) {
+			if (afterAssignment.length > 1) {
                 body.push(afterAssignment);
             } else {
                 body = body.concat(afterAssignment);
@@ -187,7 +187,7 @@ var Reader = Reader || {};
             fnBody.push(new Zha.Symbol("fn"));
             fnBody.push([].concat(params));
             var fnExpr;
-            if(Zha.ts.isList(afterAssignment[0]) || Zha.ts.isVec(afterAssignment[0])){
+            if(Zha.ts.isList(afterAssignment[0]) || Zha.ts.isBlock(afterAssignment[0])){
                 fnExpr = afterAssignment[0];
             }else{
                 fnExpr = (afterAssignment);

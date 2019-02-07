@@ -1,34 +1,45 @@
-var ZEVAL = ZEVAL || {};
-; (function (_eval, undefined) {
+var ZEVAL = ZEVAL || {};;
+(function(_eval, undefined) {
+
+    var global;
+
+    try {
+        global = Function('return this')() || (42, eval)('this');
+    } catch (e) {
+        global = window;
+    }
 
     const SPL_OPS = {
-        "fn": true, "#": true, "def": true, "if": true, "loop": true, "~" : true, "return":true
+        "fn": true,
+        "#": true,
+        "def": true,
+        "if": true,
+        "loop": true,
+        "~": true,
+        "return": true
     }
     const SPL_SYM = {
-        "stateVar": new Zha.Symbol("$state"),
-        "idVar": new Zha.Symbol("$idx"),
-        "valVar": new Zha.Symbol("$val")
-    }
-    /**
-     * Public API to eval an expression.
-     * @param {} srcAST 
-     */
-    _eval.eval = function (srcAST, runtime) {
+            "stateVar": new Zha.Symbol("$state"),
+            "idVar": new Zha.Symbol("$idx"),
+            "valVar": new Zha.Symbol("$val")
+        }
+        /**
+         * Public API to eval an expression.
+         * @param {} srcAST 
+         */
+    _eval.eval = function(srcAST, runtime) {
         return evalAST(srcAST, runtime || Zha.RT);
     }
 
-    
+
     function evalAST(ast, env) {
         if (Zha.ts.isList(ast)) {
             return evalList(ast, env);
-        }
-        else if (Zha.ts.isVec(ast)) {
-            return evalVec(ast, env);
-        }
-        else if (Zha.ts.isSymbol(ast)) {
+        } else if (Zha.ts.isBlock(ast)) {
+            return evalBlock(ast, env);
+        } else if (Zha.ts.isSymbol(ast)) {
             return env.lookup(ast);
-        }
-        else {
+        } else {
             return ast;
         }
     }
@@ -37,15 +48,15 @@ var ZEVAL = ZEVAL || {};
         const head = listForm.get(0);
         if (SPL_OPS[head.value]) {
             return evalSplOps(listForm, env);
-        }
-        else {
+        } else {
             const fn = evalAST(head, env);
             const fnArgsAsExprs = listForm.rest();
             const fnArgs = expandOperands(fnArgsAsExprs, env);
             return invoke(fn, fnArgs);
         }
     }
-    function evalVec(vecForm, env) {
+
+    function evalBlock(vecForm, env) {
         const returnForm = vecForm.last();
         const steps = vecForm.value.slice(0, vecForm.value.length - 1);
         const letEnv = new Zha.Env({}, env);
@@ -59,8 +70,7 @@ var ZEVAL = ZEVAL || {};
         const head = listForm.get(0);
         if (head.value === "def") {
             return env.define(listForm.get(1), evalAST(listForm.get(2), env));
-        }
-        else if (head.value === "fn") {
+        } else if (head.value === "fn") {
             const params = listForm.get(1);
             const fnBody = listForm.get(2);
             return new Zha.Fn((args) => {
@@ -70,55 +80,51 @@ var ZEVAL = ZEVAL || {};
                 }
                 return evalAST(fnBody, fnEnv);
             });
-        }
-        else if (head.value === "if") {
+        } else if (head.value === "if") {
             const cond = listForm.get(1);
             const condResult = evalAST(cond, env);
             if (condResult.value) {
                 return evalAST(listForm.get(2), env);
             }
             return listForm.length > 3 ?
-                evalAST(listForm.get(3), env)
-                : Zha.ts.Nil;
-        }
-        else if (head.value === "loop") {
+                evalAST(listForm.get(3), env) :
+                Zha.ts.Nil;
+        } else if (head.value === "loop") {
             const iterable = evalAST(listForm.get(1), env);
-          //  const loopingOpts = listForm.count().value > 3 ? listForm.get(2) : {};
-          //  const loopBody = listForm.count().value > 3 ? listForm.get(3) : listForm.get(2);
-			const loopBody = listForm.get(2);
+            //  const loopingOpts = listForm.count().value > 3 ? listForm.get(2) : {};
+            //  const loopBody = listForm.count().value > 3 ? listForm.get(3) : listForm.get(2);
+            const loopBody = listForm.get(2);
             const start = 0;
             const end = iterable.length;
             const incrementor = 1;
             const loopEnv = new Zha.Env({}, env);
-            var state = listForm.length > 3 ? evalAST(listForm.get(3),env) : new Array(); // mutable reference
+            var state = listForm.length > 3 ? evalAST(listForm.get(3), env) : new Array(); // mutable reference
             for (var i = start; i < end; i = i + incrementor) {
                 loopEnv.define(SPL_SYM.stateVar, state);
                 loopEnv.define(SPL_SYM.idVar, new Zha.Number(i));
                 loopEnv.define(SPL_SYM.valVar, iterable.get(i));
                 state = evalAST(loopBody, loopEnv);
-                if(Zha.ts.isReturn(state)){
+                if (Zha.ts.isReturn(state)) {
                     return state.hasValue() ? state : Zha.ts.Nil; // used to break out of the loop. TODO: Anything better ?
                 }
             }
             return state;
+        } else if (head.value === "~") {
+            return listForm.get(1); // listForm.rest();
+        } else if (head.value === "return") {
+            const returnVal = listForm.length > 1 ? evalAST(listForm.get(1), env) : undefined;
+            return new Zha.ZhaReturn(returnVal);
         }
-		else if(head.value === "~"){
-			return listForm.get(1);// listForm.rest();
-		}
-		else if(head.value === "return"){
-			const returnVal = listForm.length > 1 ? evalAST(listForm.get(1), env) : undefined;
-			return new Zha.ZhaReturn(returnVal);
-		}
-       /** else if(head.value ===  "#") {
-            const rest = listForm.rest();
-            return evalDirective(rest, env);
-        }**/
+        /** else if(head.value ===  "#") {
+             const rest = listForm.rest();
+             return evalDirective(rest, env);
+         }**/
     }
 
-    function evalDirective(listForm, env){
+    function evalDirective(listForm, env) {
         //In case of components, the current syntax is 
         //[# [hashmap other-args]]
-        if(Zha.ts.isList(listForm.first()) && listForm.first().first().value === "hashmap"){
+        if (Zha.ts.isList(listForm.first()) && listForm.first().first().value === "hashmap") {
             const nvps = [];
             const nvpList = listForm.first().rest();
             for (var i = 0; i < nvpList.value.length; i++) {
@@ -128,6 +134,7 @@ var ZEVAL = ZEVAL || {};
         }
         throw new Error("Unsupported directive " + listForm.get(0).value);
     }
+
     function expandOperands(operandsList, env) {
         const expandedOperands = new Array();
         for (var i = 0; i < operandsList.length; i++) {
@@ -135,25 +142,19 @@ var ZEVAL = ZEVAL || {};
         }
         return (expandedOperands);
     }
+
     function invoke(fnLike, args) {
         if (Zha.ts.isFn(fnLike)) {
             return fnLike.invoke(args);
-        }
-        else if(Zha.ts.isKeyword(fnLike)){
+        } else if (Zha.ts.isKeyword(fnLike)) {
             const target = args.first();
-            /** if(Zha.ts.isComponent(target)){
-                const wrapper = {
-                    get : function(key) {return new Zha.String('Dummy return for ${key.value}') }
-                }
-                return fnLike.invoke(wrapper);
-            }**/
             return fnLike.invoke(target);
-        }
-        else {
+        } else {
             //Assuming its a native fn call
             return fnLike.apply(undefined, args);
         }
     }
-    
+
+
 })(ZEVAL);
 Zha.Eval = ZEVAL;
