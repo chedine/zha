@@ -63,7 +63,7 @@ const bindings = {
     "toJs": (zha) => zha.toNative(),
     "apply": new Zha.Fn((args, env) => {
         const fn = args[0];
-        const argArray = args[1].value;
+        const argArray = args[1];
         //  const args1 = Array.isArray(argArray) ? argArray : [argArray];
         return fn.invoke(argArray);
     }),
@@ -74,9 +74,9 @@ const bindings = {
         //JS property access (includes nested props)
         const obj = listForm.get(0);
         const props = listForm.slice(1);
-        let resolved = obj[props[0].value];
+        let resolved = obj[props[0]];
         for (var i = 1; i < props.length; i++) {
-            resolved = resolved[props[i].value];
+            resolved = resolved[props[i]];
         }
         return resolved;
     },
@@ -87,10 +87,10 @@ const bindings = {
         let prop = props[0];
 
         for (var i = 1; i < props.length; i++) {
-            resolved = resolved[prop.value];
+            resolved = resolved[prop];
             prop = props[i];
         }
-        obj[prop.value] = listForm.last();
+        obj[prop] = listForm.last();
         return obj;
     },
     "new": (typeInfo, ...args) => {

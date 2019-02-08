@@ -9,9 +9,9 @@ EvalSpec = function () {
             return result;
         }
 
-        assert.equal(evalAtom('"Hello World!"').value, "Hello World!", "A string atom must eval to itself");
-        assert.equal(evalAtom('5').value, 5, "A number atom must eval to itself");
-        assert.equal(evalAtom('false').value, false, "A Bool atom must eval to itself");
+        assert.equal(evalAtom('"Hello World!"'), "Hello World!", "A string atom must eval to itself");
+        assert.equal(evalAtom('5'), 5, "A number atom must eval to itself");
+        assert.equal(evalAtom('false'), false, "A Bool atom must eval to itself");
     }
 
     simpleListForms = function (assert) {
@@ -21,8 +21,8 @@ EvalSpec = function () {
             return result;
         }
 
-        assert.equal(evalAtom('(+ 5 6)').value, 11, "(+ 5 6) must eval to 11");
-        assert.equal(evalAtom('(+ 5 (+ 7 1))').value, 13, "Operands as a list are expanded before application");
+        assert.equal(evalAtom('(+ 5 6)'), 11, "(+ 5 6) must eval to 11");
+        assert.equal(evalAtom('(+ 5 (+ 7 1))'), 13, "Operands as a list are expanded before application");
     }
 
     defFormTests = function(assert){
@@ -43,9 +43,9 @@ EvalSpec = function () {
         eval(ast.get(4));
         var resultOfC = eval(ast.get(5));
 
-        assert.equal(result.value, 110, "defined variable a must be accessible");
-        assert.equal(resultOfB.value, 110, "defined variable a must be accessible");
-        assert.equal(resultOfC.value, 165, "defined variable a must be accessible");
+        assert.equal(result, 110, "defined variable a must be accessible");
+        assert.equal(resultOfB, 110, "defined variable a must be accessible");
+        assert.equal(resultOfC, 165, "defined variable a must be accessible");
     }
     fnTests = function(assert) {
         const code = `
@@ -55,7 +55,7 @@ EvalSpec = function () {
         const ast = read(code);
         eval(ast.first());
         var result = eval(ast.second());
-        assert.equal(result.value, 11, "define");
+        assert.equal(result, 11, "define");
     }
 
     fnTests1 = function(assert) {
@@ -66,7 +66,7 @@ EvalSpec = function () {
         const ast = read(code);
         eval(ast.first());
         var result = eval(ast.second());
-        assert.equal(result.value, 11, "define");
+        assert.equal(result, 11, "define");
     }
 
     function simpleConditionalTest(assert) {
@@ -94,7 +94,7 @@ EvalSpec = function () {
         var ast = read(code);
         eval(ast.first());
         var result = eval(ast.second());
-        assert.equal(result.value , 14, "must equate to 14")
+        assert.equal(result , 14, "must equate to 14")
     }
     function simpleLoopTest(assert){
         var code = `
@@ -121,10 +121,10 @@ EvalSpec = function () {
         var ast = read(code);
         eval(ast.first());
         var result = eval(ast.second());
-        assert.equal(result.count().value , 3, "Must have 3 keys");
-        assert.equal(result.get(new Zha.Symbol(":k3")).value, 10);
+        assert.equal(result.count() , 3, "Must have 3 keys");
+        assert.equal(result.get(new Zha.Symbol(":k3")), 10);
         result = eval(ast.get(2));
-        assert.equal(result.value , "dinesh", "Must be dinesh");
+        assert.equal(result , "dinesh", "Must be dinesh");
     
     }
     function playground(assert){
@@ -139,7 +139,7 @@ EvalSpec = function () {
         var ast = read(code);
         eval(ast.first());
         var result = eval(ast.second());
-        assert.equal(result.value , "dinesh", "Must equal dinesh");
+        assert.equal(result , "dinesh", "Must equal dinesh");
     }
     return [
         "Atoms eval to itself", simpleEvalTests,

@@ -83,7 +83,7 @@ var ZEVAL = ZEVAL || {};;
         } else if (head.value === "if") {
             const cond = listForm.get(1);
             const condResult = evalAST(cond, env);
-            if (condResult.value) {
+            if (condResult === true) {
                 return evalAST(listForm.get(2), env);
             }
             return listForm.length > 3 ?
@@ -101,7 +101,7 @@ var ZEVAL = ZEVAL || {};;
             var state = listForm.length > 3 ? evalAST(listForm.get(3), env) : new Array(); // mutable reference
             for (var i = start; i < end; i = i + incrementor) {
                 loopEnv.define(SPL_SYM.stateVar, state);
-                loopEnv.define(SPL_SYM.idVar, new Zha.Number(i));
+                loopEnv.define(SPL_SYM.idVar, new Number(i));
                 loopEnv.define(SPL_SYM.valVar, iterable.get(i));
                 state = evalAST(loopBody, loopEnv);
                 if (Zha.ts.isReturn(state)) {

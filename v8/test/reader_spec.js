@@ -22,7 +22,7 @@ ReaderSpec = function () {
 
         ast = new ASTUtil(read("(add x y)"));
         assert.equal(ast.firstForm().length, 3, "<< (add x y) >> must return 3 forms");
-        assert.equal(ast.nthToken(1,1).value,"add", "Passed!");
+        assert.equal(ast.nthToken(1,1),"add", "Passed!");
 
         ast = new ASTUtil(read("(1 2 3 5)"));
         assert.equal(ast.firstForm().length, 4, "[1 2 3 5] must be an arry of 4");
@@ -33,13 +33,13 @@ ReaderSpec = function () {
     }
     oneLineAtomTests = function (assert) {
         let ast = read("add").first();
-        assert.equal(ast.value, "add", "Token must be add");
+        assert.equal(ast, "add", "Token must be add");
 
         ast = read("5").first();
-        assert.equal(ast.value, 5, "Token must be 5");
+        assert.equal(ast, 5, "Token must be 5");
 
         ast = read("  true ").first();
-        assert.equal(ast.value, true, "Token must be true");
+        assert.equal(ast, true, "Token must be true");
 
     }
     multiLineListTests = function (assert) {
@@ -120,7 +120,7 @@ ReaderSpec = function () {
         assert.equal(ast.length, 3, "name = value expands as a list of 3 forms")
         assert.equal(ast.first().value, "def", "name = value should expand as a def");
         assert.equal(ast.second().value, "age", "name = value should expand as a def");
-        assert.equal(ast.get(2).value, 24, "name = value should expand as a def");
+        assert.equal(ast.get(2), 24, "name = value should expand as a def");
 
         code = "add x y = + x y";
         ast = read(code).first();

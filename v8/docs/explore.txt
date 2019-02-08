@@ -28,3 +28,21 @@ Zha
         - 
     - eval
     - print
+------
+
+document.getElementById("node");
+
+~ document getElementById "node"
+js/call document getElementById "node"
+
+new Array(1,2)
+js/new Array 1 2
+
+obj.property
+js/prop obj "property"
+
+obj.property="value"
+js/prop! obj "property" "value"
+
+
+

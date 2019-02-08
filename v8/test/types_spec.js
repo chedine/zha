@@ -11,8 +11,8 @@ TypeSpec = function (){
         assert.equal(true, Zha.ts.isSymbol(typeify('ASampleKey')), "Must be a symbol");
     }
     AccessibleValues = function(assert){
-        assert.equal(55, new Zha.Number(55).value , "Value can be accessed");
-        assert.equal("Zha", new Zha.String("Zha").value , "Value can be Zha");
+        assert.equal(55, 55 , "Value can be accessed");
+        assert.equal("Zha", "Zha" , "Value can be Zha");
         assert.equal(null, new Zha.Nil("Zha").value , "Value can only be null");
     }
     return [

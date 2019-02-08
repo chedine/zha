@@ -30,12 +30,12 @@ EnvSpec = function (){
 
         const testBindings2 = {
             "add" : "add in group 3",
-            "overwrite-me" : new Zha.Number(57)
+            "overwrite-me" : 57
         }
         const env2 = new ENVIRONMENT(testBindings2, env1);
 
         assert.equal(env2.lookup(new Zha.Symbol("add")),"add in group 3", "Values are fetched from the outermost env that has it");
-        assert.equal(env2.lookup(new Zha.Symbol("overwrite-me")).value,57, "Outermost env can overwrite bindings in wrapped env");
+        assert.equal(env2.lookup(new Zha.Symbol("overwrite-me")),57, "Outermost env can overwrite bindings in wrapped env");
         assert.equal(env2.lookup(new Zha.Symbol("only-present-group2")),"group2", "Falls back to the next higher env");
         assert.equal(env2.lookup(new Zha.Symbol("only-present-group1")),true, "Falls back to the next higher env");
         assert.equal(env2.lookup(new Zha.Symbol("not-present-anywhere")),undefined, "Returns undefined when not found anywhere");

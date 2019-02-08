@@ -72,15 +72,12 @@
 <div id="console"></div>
 <script>if(typeof module === 'object') {window.module = module; module = undefined} </script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js" type="text/javascript" charset="utf-8"></script>
-<script src="term/jqconsole.js" type="text/javascript" charset="utf-8"></script>
+<script src="../jqconsole.js" type="text/javascript" charset="utf-8"></script>
 <script>if(window.module) module = window.module;</script>
-<script src="../types.js"></script>
-<script src="../env.js"></script>
-<script src="../reader.js"></script>
-<script src="../eval.js"></script>
-<script src="../comp.js"></script>
-<script src="../zha.js"></script>
-<script src="../lib.js"></script>
+<script src="../../types.js"></script>
+<script src="../../rt.js"></script>
+<script src="../../lang.js"></script>
+<script src="../../zhacore.js"></script>
 <script>
     var holders = 0;
     $(function () {
@@ -108,13 +105,40 @@
         }
     }
     function prettyPrint(zhaVal) {
-        return zhaVal;
+        //	  console.log(zhaVal.value);
+        //return JSON.stringify(zhaVal.value);
+        if (zhaVal === undefined || zhaVal === null) {
+            return "Nil";
+        }
+        if (_Zha$.isSeq(zhaVal)) {
+            var r = zhaVal.value; //mori.toJs(zhaVal.value);
+            var output = '[ ';
+            for (var i = 0; i < r.length; i++) {
+                output += (prettyPrint(r[i]) + ' ')
+            }
+            output += ']';
+            return output;
+        }
+        else if (_Zha$.isFn(zhaVal)) {
+            return "F()";
+        }
+        else if(zhaVal instanceof Promise){
+            var id = holders;
+            var results = `<span id="holder_${id}">Promise Waiting</span>`;
+            holders ++;
+            zhaVal.then(updater('holder_'+id));
+            return results;
+        }
+        else {
+            return zhaVal.value;
+        }
+        //return zhaVal !==undefined ? zhaVal.value : "Nil";
     }
     function isABalancedZhaExpr() {
         return false;
     }
 
-   // Zha.eval(ZhaFns);
+    Zha.eval(ZhaFns);
 </script>
 
 <body>

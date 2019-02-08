@@ -1,6 +1,42 @@
 <html>
 <title>Blank</title>
 
+<head>
+    <style>
+        #codeArea {
+            width: 900px;
+            height: 150px;
+            border-radius: 3px;
+            box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+        }
+
+        #codeArea .codeflask {
+            width: 900px;
+            height: 150px;
+            border-radius: 3px;
+        }
+
+        #codeArea .codeflask::before,
+        #codeArea .codeflask .codeflask__lines {
+            background: #FFF;
+        }
+
+        .evalBtn {
+            margin-top: 15px;
+            border: 1px solid #c0c0c0;
+            font-weight: bold;
+        }
+
+        .evalCode {
+            border-bottom: 1px solid #cccccc;
+        }
+
+        .evalRes {
+            color: green;
+        }
+    </style>
+</head>
+
 <body>
     <script src="types.js"></script>
     <script src="env.js"></script>
@@ -9,12 +45,37 @@
     <script src="comp.js"></script>
     <script src="zha.js"></script>
     <script src="lib.js"></script>
-    <script>
-    </script>
+    <script src="https://unpkg.com/codeflask/build/codeflask.min.js"></script>
 
-    <script>
-        class Component {
+    <div id="container">
+        <div id="codeArea">
+        </div>
+        <button class="evalBtn" onclick="evalCode();">Evaluate</button>
+        <div id="console">
 
+        </div>
+    </div>
+    <script>
+        const codeArea = new CodeFlask('#codeArea', { language: 'js' });
+        const consoleArea = document.querySelector("#console");
+        codeArea.updateCode("");
+        /**document.body.addEventListener("keypress", function (evt) {
+            if (evt.keyCode == 13 && evt.shiftKey) {
+                console.log(evt);
+            }
+        });**/
+        function evalCode() {
+            const code = codeArea.getCode();
+            evaluate(code);
+            codeArea.updateCode("");
+        }
+        function evaluate(code) {
+            const results = Zha.eval(code)[0];
+            let html = `<div class="evalCode">${code}</div><div class="evalRes">${results}</div>`;
+            logToConsole(html);
+        }
+        function logToConsole(html) {
+            consoleArea.innerHTML += html;
         }
     </script>
 </body>
