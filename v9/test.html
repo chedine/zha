@@ -1,0 +1,53 @@
+<html>
+<title>Blank</title>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Free Web tutorials">
+    <meta name="keywords" content="HTML,CSS,XML,JavaScript">
+    <meta name="author" content="John Doe">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: monospace;
+            font-size: 13px;
+            padding: 2px;
+        }
+        
+        #container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="zha/types.js"></script>
+    <script src="zha/env.js"></script>
+    <script src="zha/reader.js"></script>
+    <script src="zha/eval.js"></script>
+    <script src="zha/compiler.js"></script>
+    <script src="zha/zha.js"></script>
+
+    <div id="container">
+
+    </div>
+    <script>
+        var code = `
+            calculus a x b y = [
+                ax = * a x
+                by = * b y
+                + ax by
+            ]
+
+            inc n = + n 1
+        `;
+
+        const ast = Zha.Reader.read(code);
+        const f1 = ast[0];
+        const f2 = ast[1];
+    </script>
+</body>
+
+</html>
